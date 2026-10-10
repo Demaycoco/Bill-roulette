@@ -1,0 +1,6 @@
+{
+  "name": "Bill Roulette",
+  "description": "Multiplayer restaurant bill roulette on Solana Devnet with MagicBlock VRF integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
