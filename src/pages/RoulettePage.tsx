@@ -14,6 +14,7 @@ import {
 import { Table, PreparedRound, VRFLifecycleState } from '../types';
 import { RouletteWheel } from '../components/RouletteWheel';
 import { formatCents, calculateTableTotalCents } from '../utils/currency';
+import { sound } from '../utils/audio';
 import {
   magicBlockVrfService,
   MAGICBLOCK_VRF_PROGRAM_ID,
@@ -71,6 +72,9 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
 
   const handleStartSpin = async () => {
     if (isSpinning || participantCount < 2) return;
+
+    sound.playClick();
+    sound.playSpin();
 
     setIsSpinning(true);
     setHasTimeoutWarning(false);
@@ -191,12 +195,15 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
       {/* Top back button */}
       <div className="flex items-center justify-between">
         <button
-          onClick={onBackToLobby}
+          onClick={() => {
+            sound.playClick();
+            onBackToLobby();
+          }}
           disabled={isSpinning}
-          className={`flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer ${
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer py-1 ${
             isSpinning
-              ? 'opacity-40 cursor-not-allowed text-zinc-600'
-              : 'text-zinc-400 hover:text-white'
+              ? 'opacity-40 cursor-not-allowed text-[#525A51]'
+              : 'text-[#8D958C] hover:text-[#F5F7F2]'
           }`}
         >
           <ArrowLeft className="w-4 h-4" />
@@ -204,25 +211,25 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
         </button>
 
         <div className="text-right">
-          <span className="font-mono text-xs text-zinc-400 font-semibold">
+          <span className="font-mono text-xs text-[#8D958C] font-semibold">
             {table.name}
           </span>
         </div>
       </div>
 
       {/* Bill & Stakes Banner */}
-      <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between gap-4">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0B0F0D] border border-[#1C251F] flex items-center justify-between gap-4 shadow-xl">
         <div>
-          <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+          <span className="text-[11px] uppercase tracking-wider text-[#8D958C] font-semibold">
             Frozen Tab At Stake
           </span>
-          <div className="font-mono text-2xl sm:text-3xl font-extrabold text-[#ccff00] tabular-nums">
+          <div className="font-mono text-2xl sm:text-3xl font-extrabold text-[#C8FF3D] tabular-nums">
             {formatCents(totalBillCents, table.currency)}
           </div>
         </div>
 
         <div className="text-right">
-          <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+          <span className="text-[11px] uppercase tracking-wider text-[#8D958C] font-semibold">
             Eligible Diners
           </span>
           <div className="font-display text-xl font-bold text-white">
@@ -242,19 +249,19 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
       </div>
 
       {/* VRF Lifecycle Multi-Step State Tracker */}
-      <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 space-y-3">
-        <div className="flex items-center justify-between text-xs border-b border-zinc-800/80 pb-2">
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#0B0F0D] border border-[#1C251F] space-y-3 shadow-xl">
+        <div className="flex items-center justify-between text-xs border-b border-[#1C251F] pb-2">
           <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-[#ccff00]" />
+            <Cpu className="w-4 h-4 text-[#C8FF3D]" />
             <span className="font-bold text-white tracking-wide">MagicBlock VRF State</span>
           </div>
-          <span className="font-mono text-[10px] text-zinc-400">
+          <span className="font-mono text-[10px] text-[#8D958C]">
             Devnet Oracle Queue
           </span>
         </div>
 
         {/* 5-Step Pipeline Indicator */}
-        <div className="grid grid-cols-5 gap-1 pt-1">
+        <div className="grid grid-cols-5 gap-1.5 pt-1">
           {[
             { key: 'ROUND_LOCKED', label: '1. Lock' },
             { key: 'VRF_REQUESTED', label: '2. Seed' },
@@ -274,13 +281,13 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
                     isCompleted
                       ? 'bg-emerald-400'
                       : isCurrent
-                      ? 'bg-[#ccff00] animate-pulse'
-                      : 'bg-zinc-800'
+                      ? 'bg-[#C8FF3D] animate-pulse shadow-[0_0_8px_#C8FF3D]'
+                      : 'bg-[#121814]'
                   }`}
                 />
                 <span
                   className={`text-[9px] font-mono leading-none ${
-                    isCompleted || isCurrent ? 'text-zinc-200 font-semibold' : 'text-zinc-600'
+                    isCompleted || isCurrent ? 'text-[#F5F7F2] font-semibold' : 'text-[#525A51]'
                   }`}
                 >
                   {step.label}
@@ -292,15 +299,15 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
 
         {/* Live Status Description */}
         <div className="flex items-center gap-2 pt-1">
-          {isSpinning && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#ccff00] shrink-0" />}
-          <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+          {isSpinning && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#C8FF3D] shrink-0" />}
+          <p className="text-xs text-[#8D958C] font-medium leading-relaxed">
             {statusMessage}
           </p>
         </div>
 
         {/* Timeout / Callback Delay Warning & Fallback */}
         {hasTimeoutWarning && isSpinning && (
-          <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2 text-xs text-amber-300">
+          <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2 text-xs text-amber-300">
             <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
             <div className="space-y-1">
               <span className="font-semibold">Network Latency Notice:</span>
@@ -313,20 +320,20 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
 
         {/* Technical Diagnostics */}
         {executionDetails.vrfRequestId && (
-          <div className="pt-2 border-t border-zinc-800 text-[10px] font-mono text-zinc-400 space-y-1 select-all">
+          <div className="pt-2 border-t border-[#1C251F] text-[10px] font-mono text-[#8D958C] space-y-1 select-all">
             <div className="flex justify-between">
-              <span className="text-zinc-500">VRF Request ID:</span>
-              <span className="text-zinc-300 truncate max-w-[240px]">{executionDetails.vrfRequestId}</span>
+              <span className="text-[#525A51]">VRF Request ID:</span>
+              <span className="text-[#F5F7F2] truncate max-w-[240px]">{executionDetails.vrfRequestId}</span>
             </div>
             {executionDetails.beaconHex && (
               <div className="flex justify-between">
-                <span className="text-zinc-500">RFC 9381 Beacon:</span>
-                <span className="text-[#ccff00] truncate max-w-[240px]">0x{executionDetails.beaconHex.slice(0, 16)}…</span>
+                <span className="text-[#525A51]">RFC 9381 Beacon:</span>
+                <span className="text-[#C8FF3D] truncate max-w-[240px]">0x{executionDetails.beaconHex.slice(0, 16)}…</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-zinc-500">VRF Program:</span>
-              <span className="text-zinc-300 truncate max-w-[240px]">{executionDetails.oracleProgramId}</span>
+              <span className="text-[#525A51]">VRF Program:</span>
+              <span className="text-[#F5F7F2] truncate max-w-[240px]">{executionDetails.oracleProgramId}</span>
             </div>
           </div>
         )}
@@ -337,10 +344,10 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
         <button
           onClick={handleStartSpin}
           disabled={isSpinning || participantCount < 2}
-          className={`w-full min-h-[52px] rounded-2xl font-display font-extrabold text-base tracking-wide uppercase transition-all flex items-center justify-center gap-2.5 shadow-xl cursor-pointer ${
+          className={`w-full min-h-[54px] rounded-2xl font-display font-extrabold text-base tracking-wide uppercase transition-all flex items-center justify-center gap-2.5 shadow-xl cursor-pointer ${
             isSpinning || participantCount < 2
-              ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-              : 'bg-[#ccff00] text-black hover:bg-[#b8e600] active:scale-[0.98] shadow-[0_0_25px_rgba(204,255,0,0.3)]'
+              ? 'bg-[#121814] text-[#525A51] cursor-not-allowed border border-[#1F2922]'
+              : 'bg-[#C8FF3D] text-[#050505] hover:bg-[#bbf330] active:scale-[0.98] shadow-[0_0_28px_rgba(200,255,61,0.3)]'
           }`}
         >
           <Dices className="w-5 h-5 fill-current" />
@@ -348,23 +355,23 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
         </button>
 
         {participantCount < 2 && (
-          <p className="text-center text-xs text-rose-400">
+          <p className="text-center text-xs text-[#FF5A5F]">
             At least 2 participants required to spin the roulette. Return to lobby to add friends.
           </p>
         )}
       </div>
 
       {/* Honest Blockchain Disclosures */}
-      <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-2 text-xs text-zinc-400">
-        <div className="flex items-center gap-1.5 font-semibold text-zinc-300">
+      <div className="p-4 rounded-xl bg-[#0B0F0D] border border-[#1C251F] space-y-2 text-xs text-[#8D958C]">
+        <div className="flex items-center gap-1.5 font-semibold text-[#F5F7F2]">
           <ShieldAlert className="w-4 h-4 text-amber-400" />
           <span>Solana Devnet · Official MagicBlock VRF Interface</span>
         </div>
         <p className="leading-relaxed text-[11px]">
-          Randomness requests are committed via program ID <code className="text-zinc-300 font-mono">Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz</code>. The winner is strictly determined by on-chain modulo arithmetic over the verified 256-bit randomness beacon.
+          Randomness requests are committed via program ID <code className="text-[#C8FF3D] font-mono">Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz</code>. The winner is strictly determined by on-chain modulo arithmetic over the verified 256-bit randomness beacon.
         </p>
         {activePreparedRound?.deterministicInputDigest && (
-          <div className="pt-1 font-mono text-[10px] text-zinc-500 truncate">
+          <div className="pt-1 font-mono text-[10px] text-[#525A51] truncate">
             Round Input Digest: {activePreparedRound.deterministicInputDigest.slice(0, 32)}…
           </div>
         )}

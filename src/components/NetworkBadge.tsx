@@ -27,23 +27,23 @@ export function NetworkBadge() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 text-xs text-zinc-400">
-      <span className="flex items-center gap-1.5 font-medium text-zinc-300">
+    <div className="flex items-center gap-2 text-xs text-[#8d958c]">
+      <span className="flex items-center gap-1.5 font-medium text-[#f5f7f2]">
         <span
           className={`w-2 h-2 rounded-full ${
             status === 'connected'
-              ? 'bg-[#ccff00] shadow-[0_0_8px_rgba(204,255,0,0.6)]'
+              ? 'bg-[#c8ff3d] shadow-[0_0_8px_rgba(200,255,61,0.6)]'
               : status === 'checking'
-              ? 'bg-amber-400 animate-pulse'
-              : 'bg-rose-500'
+              ? 'bg-[#ffd166] animate-pulse'
+              : 'bg-[#ff5a5f]'
           }`}
         />
         Solana Devnet
       </span>
       {slot && (
         <>
-          <span aria-hidden="true" className="text-zinc-600">·</span>
-          <span className="font-mono text-[11px] text-zinc-500 hidden sm:inline">
+          <span aria-hidden="true" className="text-[#3b453e]">·</span>
+          <span className="font-mono text-[11px] text-[#8d958c] tabular-nums hidden sm:inline">
             slot {slot.toLocaleString()}
           </span>
         </>

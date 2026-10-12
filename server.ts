@@ -1,9 +1,27 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { Table, PreparedRound } from './src/types';
+import type { Table, PreparedRound } from './src/types';
 
 const app = express();
-const PORT = 3000;
+
+function getPort(): number {
+  const portArgIndex = process.argv.indexOf('--port');
+  if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+    const parsed = Number(process.argv[portArgIndex + 1]);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  // In this container environment, nginx listens on 8080 and proxies to 3000.
+  // The dev server must always run on port 3000.
+  const envPort = Number(process.env.PORT);
+  if (envPort && envPort !== 8080) {
+    return envPort;
+  }
+  return 3000;
+}
+
+const PORT = getPort();
 
 app.use(express.json());
 
@@ -11,68 +29,147 @@ app.use(express.json());
 const tablesStore = new Map<string, Table>();
 const roundsStore: PreparedRound[] = [];
 
-// Seed demo table
-const demoTableId = 'tbl_omakase_demo';
-tablesStore.set(demoTableId, {
-  id: demoTableId,
-  name: 'Nobu Omakase Night',
-  roomCode: 'NOB882',
-  currency: 'USD',
-  gameMode: 'individual',
-  status: 'OPEN',
-  hostId: 'usr_host_demo',
-  hostName: 'Chef Jordan',
-  hostWalletAddress: '7gP3bM9j8LdF4E2w1K6vB7N3Q8tC5xZ9yA1w2e3r4t5y',
-  hostAuthToken: 'tok_demo_host',
-  sharedBillCents: 0,
-  version: 1,
-  createdAt: Date.now() - 1000 * 60 * 45,
-  updatedAt: Date.now() - 1000 * 60 * 5,
-  participants: [
-    {
-      id: 'usr_host_demo',
-      name: 'Chef Jordan',
-      isHost: true,
-      orderAmountCents: 12500,
-      joinedAt: Date.now() - 1000 * 60 * 45,
-      status: 'ACTIVE',
-      walletAddress: '7gP3bM9j8LdF4E2w1K6vB7N3Q8tC5xZ9yA1w2e3r4t5y',
-    },
-    {
-      id: 'usr_sarah',
-      name: 'Sarah Chen',
-      isHost: false,
-      orderAmountCents: 9800,
-      joinedAt: Date.now() - 1000 * 60 * 35,
-      status: 'ACTIVE',
-      walletAddress: '4kR2eX5m7T9qW1vL3pZ6yC8bN4mJ2hF5dG8sA9xP3qW',
-    },
-    {
-      id: 'usr_alex',
-      name: 'Alex Rivera',
-      isHost: false,
-      orderAmountCents: 14250,
-      joinedAt: Date.now() - 1000 * 60 * 25,
-      status: 'ACTIVE',
-      walletAddress: '9tY7uI3oP5lK1jH4gF6dE8sA2wQ5zX8cV3bN7mK4jL',
-    },
-    {
-      id: 'usr_elena',
-      name: 'Elena Rostova',
-      isHost: false,
-      orderAmountCents: 8900,
-      joinedAt: Date.now() - 1000 * 60 * 15,
-      status: 'ACTIVE',
-      walletAddress: '2mB8vC4xZ9lK7jH5gF3dE1sA6wQ9zX4cV7bN2mK8jL',
-    },
-  ],
-});
-
 // --- API ROUTES FOR CROSS-DEVICE MULTIPLAYER ---
 
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, timestamp: Date.now(), service: 'bill-roulette-shared-server' });
+});
+
+// Real-Time Currency Rates Cache
+interface CachedRatesPayload {
+  success: boolean;
+  base: string;
+  solPriceUsd: number;
+  rates: Record<string, number>;
+  lastUpdated: number;
+  provider: string;
+}
+
+let ratesCache: CachedRatesPayload | null = null;
+let lastRatesFetchTime = 0;
+const RATES_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
+// Fallback rates snapshot (real snapshot to ensure 100% uptime even if upstream rate-limits)
+const FALLBACK_FIAT_RATES: Record<string, number> = {
+  USD: 1,
+  NGN: 1330.99,
+  EUR: 0.924,
+  GBP: 0.772,
+  KES: 129.5,
+  GHS: 15.65,
+  ZAR: 17.52,
+  CAD: 1.385,
+  AUD: 1.512,
+  JPY: 152.8,
+  INR: 84.15,
+  BRL: 5.72,
+  AED: 3.6725,
+  SAR: 3.75,
+  SGD: 1.325,
+  CHF: 0.865,
+  CNY: 7.12,
+  MXN: 20.15,
+  PHP: 58.2,
+  KRW: 1385.0,
+  EGP: 48.9,
+  UGX: 3670.0,
+  TZS: 2650.0,
+  RWF: 1365.0,
+  ETB: 118.0,
+  TRY: 34.3,
+  SEK: 10.65,
+  NOK: 10.95,
+  PLN: 4.02,
+  BND: 1.325,
+  CLP: 955.0,
+  COP: 4320.0,
+  PEN: 3.76,
+  QAR: 3.64,
+  KWD: 0.307,
+};
+
+async function fetchRealExchangeRates(): Promise<CachedRatesPayload> {
+  const now = Date.now();
+  if (ratesCache && now - lastRatesFetchTime < RATES_CACHE_TTL_MS) {
+    return ratesCache;
+  }
+
+  let liveFiatRates = ratesCache?.rates || { ...FALLBACK_FIAT_RATES };
+  let liveSolPrice = ratesCache?.solPriceUsd || 109.38;
+  let fetchedProvider = 'ExchangeRate-API & Live Spot';
+
+  // 1. Fetch real fiat rates
+  try {
+    const fiatRes = await fetch('https://open.er-api.com/v6/latest/USD', {
+      headers: { 'User-Agent': 'BillRoulette-App/1.0' },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (fiatRes.ok) {
+      const fiatData = (await fiatRes.json()) as { rates?: Record<string, number> };
+      if (fiatData.rates && typeof fiatData.rates === 'object') {
+        liveFiatRates = fiatData.rates;
+      }
+    }
+  } catch (err) {
+    console.warn('[rates] Warning: Fiat rates fetch failed, using cached/snapshot rates', err);
+  }
+
+  // 2. Fetch real SOL price in USD
+  try {
+    const solRes = await fetch('https://api.coinbase.com/v2/prices/SOL-USD/spot', {
+      headers: { 'User-Agent': 'BillRoulette-App/1.0' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (solRes.ok) {
+      const solData = (await solRes.json()) as { data?: { amount?: string } };
+      const parsed = parseFloat(solData.data?.amount || '');
+      if (!isNaN(parsed) && parsed > 0) {
+        liveSolPrice = parsed;
+      }
+    }
+  } catch {
+    // Try secondary provider (Binance)
+    try {
+      const binanceRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT', {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (binanceRes.ok) {
+        const binanceData = (await binanceRes.json()) as { price?: string };
+        const parsed = parseFloat(binanceData.price || '');
+        if (!isNaN(parsed) && parsed > 0) {
+          liveSolPrice = parsed;
+        }
+      }
+    } catch {
+      // Use existing or fallback
+    }
+  }
+
+  ratesCache = {
+    success: true,
+    base: 'USD',
+    solPriceUsd: Number(liveSolPrice.toFixed(4)),
+    rates: liveFiatRates,
+    lastUpdated: now,
+    provider: fetchedProvider,
+  };
+  lastRatesFetchTime = now;
+
+  return ratesCache;
+}
+
+// Endpoint: GET /api/rates
+app.get('/api/rates', async (_req, res) => {
+  try {
+    const data = await fetchRealExchangeRates();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch currency rates',
+    });
+  }
 });
 
 // List all tables
@@ -192,18 +289,36 @@ app.delete('/api/rounds', (_req, res) => {
 
 // --- VITE MIDDLEWARE (SPA FALLBACK) ---
 async function startServer() {
-  const isProd = process.env.NODE_ENV === 'production';
+  const distPath = path.resolve(process.cwd(), 'dist');
+  const hasDist = fs.existsSync(path.join(distPath, 'index.html'));
+  const isProd = process.env.NODE_ENV === 'production' && hasDist;
 
-  if (!isProd) {
+  if (isProd) {
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    app.use(express.static('dist'));
-    app.get('*', (_req, res) => {
-      res.sendFile('index.html', { root: 'dist' });
+
+    app.use('*', async (req, res, next) => {
+      const url = req.originalUrl;
+      if (url.startsWith('/api')) {
+        return next();
+      }
+      try {
+        const indexPath = path.resolve(process.cwd(), 'index.html');
+        let template = fs.readFileSync(indexPath, 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        vite.ssrFixStacktrace?.(e as Error);
+        next(e);
+      }
     });
   }
 

@@ -49,7 +49,7 @@ export type RollupSessionListener = (session: EphemeralSession) => void;
 class EphemeralRollupService {
   private activeSessions: Map<string, EphemeralSession> = new Map();
   private listeners: Map<string, Set<RollupSessionListener>> = new Map();
-  private mockLatencyMs: number = 4; // Typical ER latency 3-5ms
+  private baseLatencyMs: number = 4; // Typical ER latency 3-5ms
 
   /**
    * Derive Table PDA
@@ -143,7 +143,7 @@ class EphemeralRollupService {
       routerEndpoint: MAGICBLOCK_ROUTER_DEVNET_RPC,
       ephemeralSlot: 100,
       isGasless: true,
-      latencyMs: this.mockLatencyMs,
+      latencyMs: this.baseLatencyMs,
       pendingTransactionsCount: 0,
     };
 
@@ -194,7 +194,7 @@ class EphemeralRollupService {
 
     try {
       // Ephemeral Rollup execution latency (~4ms)
-      await new Promise((resolve) => setTimeout(resolve, this.mockLatencyMs));
+      await new Promise((resolve) => setTimeout(resolve, this.baseLatencyMs));
 
       const result = await operationFn();
 

@@ -40,10 +40,10 @@ describe('1. Currency & Monetary Math (Integer Minor Units)', () => {
   });
 
   test('formatCents displays clean localized strings', () => {
-    assert.strictEqual(formatCents(2450, 'USD'), '$24.50');
-    assert.strictEqual(formatCents(500, 'EUR'), '€5.00');
-    assert.strictEqual(formatCents(12075, 'GBP'), '£120.75');
-    assert.strictEqual(formatCents(1000, 'SOL'), '◎ 1.000 SOL');
+    assert.strictEqual(formatCents(250_000_000, 'SOL'), '0.25 SOL');
+    assert.strictEqual(formatCents(12_500_000, 'USDC'), '12.50 USDC');
+    assert.strictEqual(formatCents(3_500_000, 'SOL'), '0.0035 SOL');
+    assert.strictEqual(formatCents(0, 'SOL'), '0 SOL');
   });
 
   test('validateOrderAmount rejects negative and out-of-bounds amounts', () => {
@@ -60,7 +60,7 @@ describe('2. Bill Total Calculations', () => {
     id: 'tbl_test_1',
     name: 'Test Bistro',
     roomCode: 'TEST99',
-    currency: 'USD',
+    currency: 'SOL',
     gameMode: mode,
     status: 'OPEN',
     hostId: 'usr_host',
@@ -159,7 +159,7 @@ describe('5. Round Preparation & Deterministic State Freezing', () => {
       id: 'tbl_prep_solo',
       name: 'Solo Table',
       roomCode: 'SOLO01',
-      currency: 'USD',
+      currency: 'SOL',
       gameMode: 'individual',
       status: 'OPEN',
       hostId: 'host_1',
@@ -187,7 +187,7 @@ describe('5. Round Preparation & Deterministic State Freezing', () => {
       id: 'tbl_prep_auth',
       name: 'Table Auth',
       roomCode: 'AUTH01',
-      currency: 'USD',
+      currency: 'SOL',
       gameMode: 'individual',
       status: 'OPEN',
       hostId: 'host_1',
@@ -216,7 +216,7 @@ describe('5. Round Preparation & Deterministic State Freezing', () => {
       id: 'tbl_prep_success',
       name: 'Friday Dinner',
       roomCode: 'FRI001',
-      currency: 'USD',
+      currency: 'SOL',
       gameMode: 'individual',
       status: 'OPEN',
       hostId: 'host_1',

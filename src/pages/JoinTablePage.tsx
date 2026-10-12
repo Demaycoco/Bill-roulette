@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Loader2, ArrowRight } from 'lucide-react';
-import { Table, Participant } from '../types';
+import { Table, Participant, Currency } from '../types';
 import { participantService } from '../services/participantService';
 import { tableService, getCurrentUserId } from '../services/tableService';
-import { parseToCents } from '../utils/currency';
+import { parseToBaseUnits } from '../utils/currency';
+import { CurrencyConverter } from '../components/CurrencyConverter';
 
 interface JoinTablePageProps {
   userWalletAddress?: string;
   initialRoomCode?: string;
   onBack: () => void;
   onJoined: (table: Table, participant: Participant) => void;
+  initialPrefilledAmount?: { amount: string; currency: Currency } | null;
 }
 
 export const JoinTablePage: React.FC<JoinTablePageProps> = ({
@@ -17,13 +19,20 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
   initialRoomCode = '',
   onBack,
   onJoined,
+  initialPrefilledAmount,
 }) => {
   const [roomCode, setRoomCode] = useState(initialRoomCode.toUpperCase());
   const [name, setName] = useState('');
-  const [orderAmountStr, setOrderAmountStr] = useState('');
+  const [orderAmountStr, setOrderAmountStr] = useState(initialPrefilledAmount?.amount || '');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
+
+  React.useEffect(() => {
+    if (initialPrefilledAmount) {
+      setOrderAmountStr(initialPrefilledAmount.amount);
+    }
+  }, [initialPrefilledAmount]);
 
   const currentUserId = getCurrentUserId();
 
@@ -38,6 +47,11 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
       mounted = false;
     };
   }, []);
+
+  const selectedTable = availableTables.find(
+    (t) => t.roomCode.toUpperCase() === roomCode.trim().toUpperCase()
+  );
+  const activeCurrency = selectedTable?.currency ?? 'SOL';
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +72,17 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
     setIsLoading(true);
 
     try {
-      const orderCents = parseToCents(orderAmountStr);
+      let tableCurrency = activeCurrency;
+      const targetTable = await tableService.getTableByRoomCode(cleanCode);
+      if (targetTable) {
+        tableCurrency = targetTable.currency;
+      }
+
+      const orderBaseUnits = Number(parseToBaseUnits(orderAmountStr, tableCurrency));
       const result = await participantService.joinTable({
         roomCode: cleanCode,
         name: cleanName,
-        orderAmountCents: orderCents,
+        orderAmountCents: orderBaseUnits,
         walletAddress: userWalletAddress,
       });
 
@@ -89,7 +109,7 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
     <div className="max-w-xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors mb-6 cursor-pointer"
+        className="flex items-center gap-1.5 text-xs font-medium text-[#8D958C] hover:text-[#F5F7F2] transition-colors mb-6 cursor-pointer py-1"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Back</span>
@@ -97,24 +117,24 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
 
       <div className="space-y-6">
         <div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F5F7F2]">
             Join a Table
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <p className="text-sm text-[#8D958C] mt-1">
             Enter the host's room code to add yourself to the bill roulette.
           </p>
         </div>
 
         <form onSubmit={handleJoin} className="space-y-5">
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+            <div className="p-3.5 rounded-xl bg-[#FF5A5F]/10 border border-[#FF5A5F]/30 text-[#FF5A5F] text-xs">
               {errorMessage}
             </div>
           )}
 
           {/* Room Code */}
           <div className="space-y-1.5">
-            <label htmlFor="roomCode" className="block text-xs font-semibold text-zinc-300">
+            <label htmlFor="roomCode" className="block text-xs font-semibold text-[#F5F7F2]">
               Room Code
             </label>
             <input
@@ -123,7 +143,7 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
               placeholder="e.g. NOB882"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              className="w-full h-12 px-3.5 rounded-xl bg-zinc-900 border border-zinc-700/80 text-white placeholder-zinc-500 font-mono text-base tracking-widest uppercase focus:outline-none focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00] transition-colors"
+              className="w-full h-12 px-3.5 rounded-xl bg-[#0B0F0D] border border-[#1F2922] text-[#F5F7F2] placeholder-[#525A51] font-mono text-base tracking-widest uppercase focus:outline-none focus:border-[#C8FF3D] focus:ring-1 focus:ring-[#C8FF3D] transition-colors"
               maxLength={8}
               disabled={isLoading}
             />
@@ -131,7 +151,7 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
 
           {/* Participant Name */}
           <div className="space-y-1.5">
-            <label htmlFor="participantName" className="block text-xs font-semibold text-zinc-300">
+            <label htmlFor="participantName" className="block text-xs font-semibold text-[#F5F7F2]">
               Your Name
             </label>
             <input
@@ -140,29 +160,52 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
               placeholder="e.g. Maya Lin"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-700/80 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00] transition-colors"
+              className="w-full h-12 px-3.5 rounded-xl bg-[#0B0F0D] border border-[#1F2922] text-[#F5F7F2] placeholder-[#525A51] text-sm focus:outline-none focus:border-[#C8FF3D] focus:ring-1 focus:ring-[#C8FF3D] transition-colors"
               maxLength={30}
               disabled={isLoading}
             />
           </div>
 
+          {/* Currency Converter for What You Bought (Real Live Rates) */}
+          <CurrencyConverter
+            variant="card"
+            initialCurrencyCode="NGN"
+            initialAmount="5000"
+            targetCurrency={activeCurrency}
+            title="Currency Converter (What You Bought)"
+            subtitle={`Convert what you ordered in your local currency into ${activeCurrency} to join this table.`}
+            onApplyAmount={(amountDecimal) => {
+              setOrderAmountStr(amountDecimal);
+            }}
+          />
+
           {/* Order Amount */}
           <div className="space-y-1.5">
-            <label htmlFor="orderAmount" className="block text-xs font-semibold text-zinc-300">
-              Your Order Amount (Optional)
-            </label>
-            <input
-              id="orderAmount"
-              type="text"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={orderAmountStr}
-              onChange={(e) => setOrderAmountStr(e.target.value)}
-              className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-700/80 text-white placeholder-zinc-500 text-sm font-mono focus:outline-none focus:border-[#ccff00] focus:ring-1 focus:ring-[#ccff00] transition-colors"
-              disabled={isLoading}
-            />
-            <p className="text-[11px] text-zinc-500">
-              If the table is in individual orders mode, enter your share. You can update this in the lobby.
+            <div className="flex items-center justify-between">
+              <label htmlFor="orderAmount" className="block text-xs font-semibold text-[#F5F7F2]">
+                Your Order Amount (Optional)
+              </label>
+              <span className="text-[10px] font-mono font-bold text-[#C8FF3D] bg-[#121814] px-2 py-0.5 rounded border border-[#1F2922]">
+                {activeCurrency}
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                id="orderAmount"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={orderAmountStr}
+                onChange={(e) => setOrderAmountStr(e.target.value)}
+                className="w-full h-12 px-3.5 rounded-xl bg-[#0B0F0D] border border-[#1F2922] text-[#F5F7F2] placeholder-[#525A51] text-sm font-mono focus:outline-none focus:border-[#C8FF3D] focus:ring-1 focus:ring-[#C8FF3D] transition-colors"
+                disabled={isLoading}
+              />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-semibold text-[#8D958C]">
+                {activeCurrency}
+              </div>
+            </div>
+            <p className="text-[11px] text-[#8D958C]">
+              Stored as integer base units ({activeCurrency === 'SOL' ? 'lamports' : 'micro-USDC'}). Exact precision preserved.
             </p>
           </div>
 
@@ -170,15 +213,15 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full h-12 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
               isLoading
-                ? 'bg-zinc-800 text-zinc-400 cursor-not-allowed'
-                : 'bg-[#ccff00] text-black hover:bg-[#b8e600] active:scale-[0.98] shadow-[0_0_20px_rgba(204,255,0,0.2)]'
+                ? 'bg-[#121814] text-[#8D958C] cursor-not-allowed'
+                : 'bg-[#C8FF3D] text-[#050505] hover:bg-[#bbf330] active:scale-[0.98] shadow-[0_0_20px_rgba(200,255,61,0.22)]'
             }`}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#C8FF3D]" />
                 <span>Checking Table...</span>
               </>
             ) : (
@@ -192,8 +235,8 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
 
         {/* Quick Join Active Tables */}
         {availableTables.length > 0 && (
-          <div className="pt-6 border-t border-zinc-800 space-y-3">
-            <div className="flex items-center justify-between text-xs text-zinc-400 font-semibold">
+          <div className="pt-6 border-t border-[#1C251F] space-y-3">
+            <div className="flex items-center justify-between text-xs text-[#8D958C] font-semibold">
               <span>Open Tables</span>
               <span>{availableTables.length} Active</span>
             </div>
@@ -206,18 +249,21 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
                     key={t.id}
                     onClick={() => handleQuickSelectTable(t)}
                     type="button"
-                    className="w-full p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 hover:border-zinc-700 flex items-center justify-between text-left transition-colors cursor-pointer"
+                    className="w-full p-3.5 rounded-2xl bg-[#0B0F0D] border border-[#1F2922] hover:border-[#C8FF3D]/40 flex items-center justify-between text-left transition-all cursor-pointer group"
                   >
                     <div className="space-y-0.5">
-                      <div className="text-xs font-semibold text-white flex items-center gap-2">
+                      <div className="text-xs font-semibold text-[#F5F7F2] flex items-center gap-2 group-hover:text-white">
                         <span>{t.name}</span>
                         {isUserAlreadyIn && (
-                          <span className="text-[10px] text-[#ccff00] font-mono">
+                          <span className="text-[10px] text-[#C8FF3D] font-mono">
                             Joined
                           </span>
                         )}
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#121814] text-[#C8FF3D] border border-[#1F2922]">
+                          {t.currency}
+                        </span>
                       </div>
-                      <div className="text-[11px] text-zinc-500 flex items-center gap-2">
+                      <div className="text-[11px] text-[#8D958C] flex items-center gap-2">
                         <span>Host: {t.hostName}</span>
                         <span aria-hidden="true">·</span>
                         <span>{t.participants.length} seated</span>
@@ -225,7 +271,7 @@ export const JoinTablePage: React.FC<JoinTablePageProps> = ({
                     </div>
 
                     <div className="text-right">
-                      <span className="font-mono text-xs font-semibold text-zinc-300 bg-zinc-800 px-2 py-1 rounded">
+                      <span className="font-mono text-xs font-semibold text-[#C8FF3D] bg-[#121814] px-2.5 py-1 rounded-lg border border-[#1F2922]">
                         {t.roomCode}
                       </span>
                     </div>

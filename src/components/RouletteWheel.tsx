@@ -9,14 +9,14 @@ interface RouletteWheelProps {
   onSpinComplete: (winnerIndex: number) => void;
 }
 
-// Curated palette for wheel sectors
+// Curated palette for wheel sectors matching Brand Kit dark carbon obsidian
 const SECTOR_COLORS = [
-  '#18191f',
-  '#23262f',
-  '#1b1c22',
-  '#2a2d37',
-  '#1f2128',
-  '#272a33',
+  '#0E1410',
+  '#161E18',
+  '#0A0F0C',
+  '#1B251E',
+  '#121914',
+  '#1F2B22',
 ];
 
 export const RouletteWheel: React.FC<RouletteWheelProps> = ({
@@ -158,12 +158,12 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     <div className="relative flex flex-col items-center justify-center select-none py-2">
       {/* Top pointer marker (Top Needle) */}
       <div className="absolute top-0 z-30 flex flex-col items-center -translate-y-1">
-        <div className="w-0 h-0 border-l-[11px] border-l-transparent border-r-[11px] border-r-transparent border-t-[20px] border-t-[#ccff00] drop-shadow-[0_4px_8px_rgba(204,255,0,0.5)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-black border-2 border-[#ccff00] -mt-1" />
+        <div className="w-0 h-0 border-l-[11px] border-l-transparent border-r-[11px] border-r-transparent border-t-[20px] border-t-[#C8FF3D] drop-shadow-[0_4px_10px_rgba(200,255,61,0.6)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#050505] border-2 border-[#C8FF3D] -mt-1" />
       </div>
 
       {/* Wheel outer ring & ambient glow */}
-      <div className="relative p-2 rounded-full bg-gradient-to-b from-zinc-700/60 via-zinc-900 to-black border border-zinc-700/50 shadow-2xl shadow-black/80">
+      <div className="relative p-2 rounded-full bg-gradient-to-b from-[#1F2922] via-[#0B0F0D] to-[#050505] border border-[#2A382D] shadow-2xl shadow-black/90">
         <svg
           viewBox={`0 0 ${wheelSize} ${wheelSize}`}
           className="w-[280px] h-[280px] sm:w-[340px] sm:h-[340px] max-w-[calc(100vw-3rem)] max-h-[calc(100vw-3rem)] transition-transform will-change-transform"
@@ -177,8 +177,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             cx={center}
             cy={center}
             r={radius + 6}
-            fill="#121318"
-            stroke="#27272a"
+            fill="#0B0F0D"
+            stroke="#1F2922"
             strokeWidth="3"
           />
 
@@ -193,7 +193,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 <path
                   d={arcPath}
                   fill={sec.color}
-                  stroke="#333742"
+                  stroke="#1F2922"
                   strokeWidth="1.2"
                 />
 
@@ -205,8 +205,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                       cx={peg.x}
                       cy={peg.y}
                       r="2.5"
-                      fill="#ccff00"
-                      opacity="0.7"
+                      fill="#C8FF3D"
+                      opacity="0.8"
                     />
                   );
                 })()}
@@ -215,7 +215,7 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 <text
                   x={textPos.x}
                   y={textPos.y}
-                  fill="#f4f4f6"
+                  fill="#F5F7F2"
                   fontSize={numSectors > 6 ? '11' : '13'}
                   fontWeight="600"
                   textAnchor="middle"
@@ -231,32 +231,46 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
             );
           })}
 
-          {/* Central Hub */}
+          {/* Central Hub with Aperture Insignia */}
           <circle
             cx={center}
             cy={center}
             r="38"
-            fill="#0d0e12"
-            stroke="#3f3f46"
+            fill="#050505"
+            stroke="#1F2922"
             strokeWidth="2.5"
           />
           <circle
             cx={center}
             cy={center}
             r="28"
-            fill="#181920"
-            stroke="#ccff00"
+            fill="#0B0F0D"
+            stroke="#C8FF3D"
             strokeWidth="1.5"
+          />
+          <circle
+            cx={center}
+            cy={center}
+            r="8"
+            fill="#121814"
+            stroke="#C8FF3D"
+            strokeWidth="1"
+          />
+          <circle
+            cx={center}
+            cy={center}
+            r="3.5"
+            fill="#C8FF3D"
           />
           <text
             x={center}
-            y={center}
-            fill="#ccff00"
-            fontSize="10"
+            y={center + 16}
+            fill="#C8FF3D"
+            fontSize="8"
             fontWeight="700"
             textAnchor="middle"
             dominantBaseline="central"
-            className="tracking-wider uppercase select-none font-mono"
+            className="tracking-widest uppercase select-none font-mono"
           >
             VRF
           </text>

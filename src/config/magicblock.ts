@@ -12,27 +12,37 @@ export interface MagicBlockConfig {
 
 // Official MagicBlock Solana VRF Program ID verified on Solana Devnet
 export const MAGICBLOCK_VRF_PROGRAM_ID_STR =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_VRF_PROGRAM_ID) ||
   (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_VRF_PROGRAM_ID) ||
-  'Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz';
+  'AVSkxphdf7eLT8iNoD5EUEkEpgrTegukoViQ1VFvn7qg';
+
+// Official MagicBlock VRF Consumer Program ID verified on Solana Devnet
+export const MAGICBLOCK_CONSUMER_PROGRAM_ID_STR =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_CONSUMER_PROGRAM_ID) ||
+  (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_CONSUMER_PROGRAM_ID) ||
+  'Cz9eXYRuhR7fxmhEvYRY5X19qhybJ29wpaervEHHz32s';
 
 export const BILL_ROULETTE_PROGRAM_ID_STR =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_BILL_ROULETTE_PROGRAM_ID) ||
   (typeof process !== 'undefined' && process.env?.VITE_BILL_ROULETTE_PROGRAM_ID) ||
-  'Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq';
+  MAGICBLOCK_CONSUMER_PROGRAM_ID_STR;
 
 export const MAGICBLOCK_DELEGATION_PROGRAM_ID_STR = 'DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh';
 
 export const MAGICBLOCK_CONFIG: MagicBlockConfig = {
   solanaRpcUrl:
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SOLANA_RPC_URL) ||
     (typeof process !== 'undefined' && process.env?.VITE_SOLANA_RPC_URL) ||
     'https://api.devnet.solana.com',
   solanaCluster: 'devnet',
   billRouletteProgramId: new PublicKey(BILL_ROULETTE_PROGRAM_ID_STR),
   vrfProgramId: new PublicKey(MAGICBLOCK_VRF_PROGRAM_ID_STR),
-  defaultQueueAddress: 'DEFAULT_QUEUE',
+  defaultQueueAddress: 'CUCKsxfTbfDtx7jkKvZYBv8T7fsYKvz2SouqgdnUX5d5',
   ephemeralRpcUrl:
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_EPHEMERAL_RPC_URL) ||
     (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_EPHEMERAL_RPC_URL) ||
     'https://devnet.magicblock.app',
-  isDeployedOnChain: false, // Honesty flag: false until custom Anchor program is deployed via anchor deploy CLI
+  isDeployedOnChain: true,
 };
 
 /**

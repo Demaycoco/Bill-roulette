@@ -10,6 +10,7 @@ import { walletService } from './services/walletService';
 
 import { Navbar } from './components/Navbar';
 import { BottomTabBar } from './components/BottomTabBar';
+import { ConnectWalletModal } from './components/ConnectWalletModal';
 
 import { LandingPage } from './pages/LandingPage';
 import { CreateTablePage } from './pages/CreateTablePage';
@@ -26,6 +27,8 @@ export default function App() {
   const [activeRound, setActiveRound] = useState<RouletteRound | null>(null);
   const [initialJoinCode, setInitialJoinCode] = useState<string>('');
   const [walletState, setWalletState] = useState<WalletState>(walletService.getState());
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
+  const [prefilledAmount, setPrefilledAmount] = useState<{ amount: string; currency: 'SOL' | 'USDC' } | null>(null);
 
   // Subscribe to wallet updates
   useEffect(() => {
@@ -59,13 +62,13 @@ export default function App() {
     return unsub;
   }, [activeTable]);
 
-  // Load first available table on initial mount if none selected
+  // Clear active table if it was deleted
   useEffect(() => {
     let mounted = true;
-    if (!activeTable) {
-      tableService.getAllTables().then((tables) => {
-        if (mounted && tables.length > 0) {
-          setActiveTable(tables[0]);
+    if (activeTable) {
+      tableService.getTable(activeTable.id).then((t) => {
+        if (mounted && !t) {
+          setActiveTable(null);
         }
       });
     }
@@ -90,17 +93,24 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d0e12] text-[#f4f4f6] flex flex-col selection:bg-[#ccff00] selection:text-black">
-      {/* 3-Zone Top Bar */}
+    <div className="min-h-screen bg-[#050505] text-[#F5F7F2] flex flex-col selection:bg-[#C8FF3D] selection:text-[#050505]">
+      {/* Responsive Header Top Bar */}
       <Navbar
         currentView={currentView}
         onNavigate={(view) => setCurrentView(view)}
         walletState={walletState}
         hasActiveTable={!!activeTable}
+        onOpenWalletModal={() => setIsWalletModalOpen(true)}
       />
 
-      {/* Main Content Viewport */}
-      <main className="flex-1 pb-20 md:pb-10">
+      {/* Wallet Connection Modal */}
+      <ConnectWalletModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+      />
+
+      {/* App Content Viewport */}
+      <main className="app-content flex-1 w-full pb-24 md:pb-12">
         {currentView === 'landing' && (
           <LandingPage
             onStartTable={() => setCurrentView('create-table')}
@@ -114,6 +124,7 @@ export default function App() {
             hostWalletAddress={walletState.publicKey || undefined}
             onBack={() => setCurrentView(activeTable ? 'lobby' : 'landing')}
             onTableCreated={handleTableCreated}
+            initialPrefilledAmount={prefilledAmount}
           />
         )}
 
@@ -123,6 +134,7 @@ export default function App() {
             initialRoomCode={initialJoinCode}
             onBack={() => setCurrentView(activeTable ? 'lobby' : 'landing')}
             onJoined={handleTableJoined}
+            initialPrefilledAmount={prefilledAmount}
           />
         )}
 

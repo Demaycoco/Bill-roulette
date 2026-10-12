@@ -1,4 +1,4 @@
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'SOL';
+export type Currency = 'SOL' | 'USDC';
 
 export type GameMode = 'individual' | 'shared';
 
@@ -154,12 +154,17 @@ export interface SolanaTransactionInfo {
   programId: string;
 }
 
+export type SupportedWalletId = 'phantom' | 'solflare' | 'backpack' | 'standard';
+
 export interface WalletState {
   connected: boolean;
   publicKey: string | null;
   walletName: string | null;
+  walletId?: SupportedWalletId | null;
   balanceLamports: number | null;
+  balanceUsdcBaseUnits?: number | null;
   isConnecting: boolean;
   error: string | null;
   network: 'devnet';
+  isExternal?: boolean;
 }

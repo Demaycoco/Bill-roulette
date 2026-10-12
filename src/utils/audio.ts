@@ -28,6 +28,66 @@ class SoundEngine {
   }
 
   /**
+   * Crisp UI interaction click sound
+   */
+  public playClick(pitchMultiplier: number = 1.0) {
+    if (this.isMuted) return;
+    try {
+      this.initContext();
+      if (!this.ctx) return;
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880 * pitchMultiplier, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(280, this.ctx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.04);
+    } catch {
+      // AudioContext might be blocked until user gesture
+    }
+  }
+
+  /**
+   * Spin animation sound effect in RoulettePage
+   */
+  public playSpin() {
+    if (this.isMuted) return;
+    try {
+      this.initContext();
+      if (!this.ctx) return;
+
+      // Dynamic compound spin sound: rising swoosh + atmospheric whoosh
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(920, this.ctx.currentTime + 0.4);
+
+      gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.18, this.ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.45);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.45);
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Click sound when the roulette needle ticks over a sector
    */
   public playTick(pitchMultiplier: number = 1.0) {
