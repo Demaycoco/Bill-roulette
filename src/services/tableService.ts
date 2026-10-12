@@ -450,7 +450,7 @@ export class TableService {
   }
 
   /**
-   * Synchronize Ephemeral Rollup state snapshot back to Solana Devnet L1
+   * Synchronize Ephemeral Rollup state snapshot back to Solana Mainnet L1
    */
   public async syncTableRollupState(tableId: string, requesterId: string) {
     const table = await this.tableRepo.findById(tableId);
@@ -465,7 +465,7 @@ export class TableService {
   }
 
   /**
-   * Undelegate table from Ephemeral Rollup back to Solana Devnet L1
+   * Undelegate table from Ephemeral Rollup back to Solana Mainnet L1
    */
   public async undelegateTableFromRollup(tableId: string, requesterId: string) {
     const table = await this.tableRepo.findById(tableId);

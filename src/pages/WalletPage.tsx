@@ -15,11 +15,11 @@ import {
   ArrowLeftRight,
 } from 'lucide-react';
 import { WalletState, SupportedWalletId } from '../types';
-import { walletService, AirdropResult } from '../services/walletService';
+import { walletService } from '../services/walletService';
 import { solanaTransactionService } from '../services/solanaTransactionService';
 import { sound } from '../utils/audio';
 import { ConnectWalletModal } from '../components/ConnectWalletModal';
-import { formatBaseUnits, DEVNET_USDC_MINT } from '../utils/currency';
+import { formatBaseUnits, MAINNET_USDC_MINT } from '../utils/currency';
 
 interface WalletPageProps {
   walletState: WalletState;
@@ -28,8 +28,6 @@ interface WalletPageProps {
 
 export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) => {
   const [copiedAddress, setCopiedAddress] = useState(false);
-  const [isAirdropping, setIsAirdropping] = useState(false);
-  const [airdropResult, setAirdropResult] = useState<AirdropResult | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [connectingId, setConnectingId] = useState<SupportedWalletId | null>(null);
@@ -60,26 +58,6 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
     setConnectingId(null);
   };
 
-  const handleRequestAirdrop = async (targetPubkey?: string) => {
-    if (isAirdropping) return;
-    sound.playClick();
-    setIsAirdropping(true);
-    setAirdropResult(null);
-
-    try {
-      const result = await walletService.requestAirdrop(targetPubkey);
-      setAirdropResult(result);
-    } catch (err: unknown) {
-      setAirdropResult({
-        success: false,
-        error: err instanceof Error ? err.message : 'An unexpected error occurred during the airdrop request.',
-        balanceRefreshed: false,
-      });
-    } finally {
-      setIsAirdropping(false);
-    }
-  };
-
   const solBalance =
     walletState.balanceLamports !== null
       ? (walletState.balanceLamports / 1_000_000_000).toFixed(4)
@@ -108,10 +86,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
 
       <div>
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-          Solana Devnet Wallet
+          Solana Mainnet Wallet
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Manage your Solana account for signing and settlement on Devnet.
+          Manage your Solana account for real check settlements and verifiable spins.
         </p>
       </div>
 
@@ -138,7 +116,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
                 </span>
               </div>
               <span className="text-[11px] font-mono text-[#8D958C] bg-[#121814] border border-[#1F2922] px-2 py-0.5 rounded">
-                Solana Devnet
+                Solana Mainnet
               </span>
             </div>
 
@@ -161,17 +139,17 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
               </button>
             </div>
 
-            {/* Balances Box (Native SOL and Circle Devnet USDC) */}
+            {/* Balances Box (Native SOL and Circle Mainnet USDC) */}
             <div className="p-4 rounded-xl bg-gradient-to-r from-[#050505] to-[#121814] border border-[#1F2922] space-y-3.5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-wider text-[#8D958C] font-semibold">
-                  Solana Devnet Balances
+                  Solana Mainnet Balances
                 </span>
                 <button
                   onClick={handleRefreshBalance}
                   disabled={isRefreshing}
                   className="p-1.5 rounded-lg bg-[#121814] hover:bg-[#17201B] border border-[#1F2922] text-[#8D958C] hover:text-[#F5F7F2] transition-colors cursor-pointer"
-                  title="Refresh Devnet Balances"
+                  title="Refresh Balances"
                 >
                   <RefreshCw
                     className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#C8FF3D]' : ''}`}
@@ -203,108 +181,25 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
                 </div>
               </div>
 
-              {/* Devnet Mint Verification Tag */}
+              {/* Mainnet Mint Verification Tag */}
               <div className="p-2.5 rounded-lg bg-[#0B0F0D] border border-[#1C251F] flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5 text-zinc-300">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#C8FF3D] shrink-0" />
-                  <span>Devnet USDC Mint Verified</span>
+                  <span>Mainnet USDC Mint Verified</span>
                 </div>
                 <span className="font-mono text-[10px] text-[#8D958C]">
-                  {DEVNET_USDC_MINT.slice(0, 4)}...{DEVNET_USDC_MINT.slice(-4)}
+                  {MAINNET_USDC_MINT.slice(0, 4)}...{MAINNET_USDC_MINT.slice(-4)}
                 </span>
               </div>
             </div>
 
-            {/* Devnet Faucet Airdrop Button */}
-            <div className="space-y-3">
-              <button
-                onClick={() => handleRequestAirdrop(walletState.publicKey || undefined)}
-                disabled={isAirdropping}
-                className={`w-full h-11 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                  isAirdropping
-                    ? 'bg-[#121814] text-[#8D958C] border border-[#1F2922] cursor-not-allowed'
-                    : 'bg-[#C8FF3D] text-[#050505] hover:bg-[#bbf330] active:scale-[0.99] shadow-[0_0_16px_rgba(200,255,61,0.2)]'
-                }`}
-              >
-                {isAirdropping ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin text-[#8D958C]" />
-                    <span>Requesting SOL...</span>
-                  </>
-                ) : (
-                  <>
-                    <Coins className="w-4 h-4 text-[#050505]" />
-                    <span>Request Devnet SOL</span>
-                  </>
-                )}
-              </button>
-
-              {/* Airdrop Notification & Feedback */}
-              {airdropResult && (
-                <div className="space-y-2">
-                  {airdropResult.success ? (
-                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-1.5">
-                      <div className="flex items-center gap-2 font-medium">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>
-                          {airdropResult.balanceRefreshed
-                            ? 'Devnet SOL received successfully.'
-                            : 'Devnet SOL received successfully, but displayed balance could not be refreshed. Click the refresh button to update.'}
-                        </span>
-                      </div>
-                      {airdropResult.explorerUrl && (
-                        <div className="pt-1 border-t border-emerald-500/20">
-                          <a
-                            href={airdropResult.explorerUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#C8FF3D] hover:underline"
-                          >
-                            <span>View transaction on Solana Explorer</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                        <div className="space-y-1">
-                          <span className="font-semibold text-amber-300">Airdrop Notice</span>
-                          <p className="leading-relaxed text-[11px] text-[#8D958C]">
-                            {airdropResult.error}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Alternate Faucet Links */}
-                      <div className="pt-2 border-t border-amber-500/20 flex flex-wrap gap-2 text-[11px]">
-                        <span className="text-[#8D958C]">Alternative test faucets:</span>
-                        <a
-                          href="https://faucet.solana.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[#C8FF3D] hover:underline font-mono"
-                        >
-                          faucet.solana.com
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                        <span className="text-[#2C3830]">·</span>
-                        <a
-                          href="https://solfaucet.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[#C8FF3D] hover:underline font-mono"
-                        >
-                          solfaucet.com
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* Mainnet Readiness Notice */}
+            <div className="p-3.5 rounded-xl bg-[#121814] border border-[#1F2922] flex items-center justify-between text-xs text-[#8D958C]">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#C8FF3D]" />
+                <span className="text-[#F5F7F2] font-semibold">Solana Mainnet Beta</span>
+              </div>
+              <span className="font-mono text-[11px] text-[#C8FF3D]">Production Ready</span>
             </div>
 
             {/* Explorer Link */}
@@ -473,7 +368,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
         <div className="space-y-1">
           <span className="font-semibold text-[#F5F7F2]">Security Guarantee</span>
           <p className="leading-relaxed text-[11px]">
-            Bill Roulette never requests, accesses, or stores private keys or seed phrases. All interactions adhere to standard Solana wallet adapter protocols targeting Solana Devnet.
+            Bill Roulette never requests, accesses, or stores private keys or seed phrases. All interactions adhere to standard Solana wallet adapter protocols targeting Solana Mainnet Beta.
           </p>
         </div>
       </div>

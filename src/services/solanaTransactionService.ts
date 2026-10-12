@@ -1,27 +1,33 @@
-import { Connection, PublicKey } from '@solana/web3.js';
-import { walletService } from './walletService';
+import { Connection } from '@solana/web3.js';
 import { SolanaTransactionInfo } from '../types';
+import { MAGICBLOCK_CONFIG } from '../config/magicblock';
+import {
+  getAuthoritativeConnection,
+  getMainnetExplorerTxUrl,
+  getMainnetExplorerAddressUrl,
+  validateMainnetCluster,
+} from '../config/solanaNetwork';
 
 class SolanaTransactionService {
   private connection: Connection;
 
   constructor() {
-    this.connection = walletService.getConnection();
+    this.connection = getAuthoritativeConnection();
   }
 
   /**
-   * Get valid Solana Explorer URL for Devnet
+   * Get authoritative Solana Explorer URL for Mainnet Beta (no cluster param needed on mainnet)
    */
   public getExplorerUrl(signature: string): string {
-    return `https://explorer.solana.com/tx/${encodeURIComponent(signature)}?cluster=devnet`;
+    return getMainnetExplorerTxUrl(signature);
   }
 
   public getAccountExplorerUrl(address: string): string {
-    return `https://explorer.solana.com/address/${encodeURIComponent(address)}?cluster=devnet`;
+    return getMainnetExplorerAddressUrl(address);
   }
 
   /**
-   * Check whether a transaction signature has confirmed on Devnet
+   * Check whether a transaction signature has confirmed on Solana Mainnet Beta
    */
   public async verifyTransactionOnChain(signature: string): Promise<SolanaTransactionInfo | null> {
     try {
@@ -35,6 +41,18 @@ class SolanaTransactionService {
         return null;
       }
 
+      // Requirement 12: Check if transaction encountered an on-chain execution error
+      if (status.value.err) {
+        return {
+          signature,
+          slot: status.value.slot,
+          confirmed: false,
+          cluster: 'mainnet-beta',
+          explorerUrl: this.getExplorerUrl(signature),
+          programId: MAGICBLOCK_CONFIG.vrfProgramId.toBase58(),
+        };
+      }
+
       const confirmed =
         status.value.confirmationStatus === 'confirmed' ||
         status.value.confirmationStatus === 'finalized';
@@ -43,9 +61,9 @@ class SolanaTransactionService {
         signature,
         slot: status.value.slot,
         confirmed,
-        cluster: 'devnet',
+        cluster: 'mainnet-beta',
         explorerUrl: this.getExplorerUrl(signature),
-        programId: 'PendingProgramDeployment',
+        programId: MAGICBLOCK_CONFIG.vrfProgramId.toBase58(),
       };
     } catch {
       return null;
@@ -53,15 +71,19 @@ class SolanaTransactionService {
   }
 
   /**
-   * Fetch current cluster health
+   * Fetch current cluster health and cryptographically validate Mainnet genesis hash
    */
-  public async getDevnetHealth(): Promise<{ ok: boolean; slot?: number }> {
-    try {
-      const slot = await this.connection.getSlot('confirmed');
-      return { ok: true, slot };
-    } catch {
-      return { ok: false };
+  public async getClusterHealth(): Promise<{ ok: boolean; slot?: number; error?: string }> {
+    const clusterCheck = await validateMainnetCluster(this.connection);
+    if (!clusterCheck.isValid) {
+      return { ok: false, error: clusterCheck.error };
     }
+    return { ok: true, slot: clusterCheck.slot };
+  }
+
+  // Alias for backward compatibility
+  public async getDevnetHealth(): Promise<{ ok: boolean; slot?: number }> {
+    return this.getClusterHealth();
   }
 }
 

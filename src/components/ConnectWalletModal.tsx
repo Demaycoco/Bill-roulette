@@ -146,11 +146,11 @@ export const ConnectWalletModal: React.FC<ConnectWalletModalProps> = ({
           </p>
         </div>
 
-        {/* Devnet Network Notice */}
+        {/* Mainnet Network Notice */}
         <div className="px-3.5 py-2 rounded-xl bg-[#121814] border border-[#1F2922] flex items-center justify-between text-[11px]">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#C8FF3D] animate-pulse" />
-            <span className="text-[#F5F7F2] font-medium">Network: Solana Devnet</span>
+            <span className="text-[#F5F7F2] font-medium">Network: Solana Mainnet</span>
           </div>
           <span className="text-[#8D958C] font-mono">Cluster Active</span>
         </div>

@@ -122,7 +122,7 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({
                       </span>
                     ) : (
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                        Solana Devnet
+                        Solana Mainnet
                       </span>
                     )}
                     <span className="text-[#8D958C] text-[11px]">{dateStr}</span>

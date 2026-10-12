@@ -287,6 +287,51 @@ app.delete('/api/rounds', (_req, res) => {
   res.status(204).send();
 });
 
+// --- SECURE SOLANA MAINNET RPC PROXY ---
+// Proxies JSON-RPC calls without exposing private RPC provider credentials / API keys to frontend bundles
+app.post('/api/solana-rpc', async (req, res) => {
+  const serverRpcUrl =
+    process.env.SOLANA_MAINNET_RPC_URL ||
+    process.env.SOLANA_RPC_URL ||
+    'https://api.mainnet-beta.solana.com';
+
+  try {
+    const upstreamRes = await fetch(serverRpcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'BillRoulette-Server/1.0',
+      },
+      body: JSON.stringify(req.body),
+      signal: AbortSignal.timeout(20000),
+    });
+
+    const data = await upstreamRes.json();
+    res.status(upstreamRes.status).json(data);
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    res.status(502).json({
+      jsonrpc: '2.0',
+      error: {
+        code: -32000,
+        message: `Upstream Solana Mainnet RPC gateway failure: ${errorMsg}`,
+      },
+      id: req.body?.id ?? null,
+    });
+  }
+});
+
+// Network status and cluster validation endpoint
+app.get('/api/network/status', (_req, res) => {
+  res.json({
+    cluster: 'mainnet-beta',
+    genesisHash: '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d',
+    officialFallbackRpc: 'https://api.mainnet-beta.solana.com',
+    dedicatedRpcConfigured: Boolean(process.env.SOLANA_MAINNET_RPC_URL),
+    status: 'ACTIVE_MAINNET_BETA',
+  });
+});
+
 // --- VITE MIDDLEWARE (SPA FALLBACK) ---
 async function startServer() {
   const distPath = path.resolve(process.cwd(), 'dist');

@@ -179,7 +179,7 @@ describe('MagicBlock Ephemeral Rollups: Specification & Lifecycle Protocol Tests
 
     // Call VRF safety check
     const vrfEnvironment = await ephemeralRollupService.ensureSafeVrfEnvironment(vrftableId);
-    assert.strictEqual(vrfEnvironment.mode, 'BASE_DEVNET_L1');
+    assert.strictEqual(vrfEnvironment.mode, 'BASE_MAINNET_L1');
 
     // Ensure session is cleanly returned to base layer to prevent any state desync during VRF callback
     const postSession = ephemeralRollupService.getSession(vrftableId);

@@ -402,14 +402,14 @@ export const TableLobbyPage: React.FC<TableLobbyPageProps> = ({
           <div className="p-2.5 rounded-xl bg-[#121814] border border-[#1F2922]">
             <span className="text-[10px] text-[#8D958C] uppercase font-semibold block">Execution Mode</span>
             <span className="font-mono text-[#F5F7F2] font-medium">
-              {rollupSession?.isDelegated ? 'Rollup Accelerated' : 'Solana Devnet L1'}
+              {rollupSession?.isDelegated ? 'Rollup Accelerated' : 'Solana Mainnet L1'}
             </span>
           </div>
 
           <div className="p-2.5 rounded-xl bg-[#121814] border border-[#1F2922]">
             <span className="text-[10px] text-[#8D958C] uppercase font-semibold block">Transaction Latency</span>
             <span className="font-mono text-[#C8FF3D] font-medium">
-              {rollupSession?.isDelegated ? '<5ms (Sub-10ms)' : '~400ms (Base Devnet)'}
+              {rollupSession?.isDelegated ? '<5ms (Sub-10ms)' : '~400ms (Base Mainnet)'}
             </span>
           </div>
 
@@ -420,7 +420,7 @@ export const TableLobbyPage: React.FC<TableLobbyPageProps> = ({
                 rollupSession?.isGasless && rollupSession?.isDelegated ? 'text-emerald-400' : 'text-[#8D958C]'
               }`}
             >
-              {rollupSession?.isGasless && rollupSession?.isDelegated ? '0 SOL (Gasless Active)' : 'Standard Devnet Gas'}
+              {rollupSession?.isGasless && rollupSession?.isDelegated ? '0 SOL (Gasless Active)' : 'Standard Solana Gas'}
             </span>
           </div>
 
@@ -444,11 +444,11 @@ export const TableLobbyPage: React.FC<TableLobbyPageProps> = ({
               )}
             </span>
             <span className="text-[#525A51] text-[10px] font-mono">
-              Validator: {rollupSession?.validator || 'magicblock-devnet-er-validator-01'}
+              Validator: {rollupSession?.validator || 'magicblock-mainnet-er-validator-01'}
             </span>
           </div>
           <p className="text-[11px] text-[#8D958C]">
-            Diner order edits and table join requests execute inside the Ephemeral Rollup. When the round is prepared, state automatically commits to Devnet L1 for verified MagicBlock VRF randomness.
+            Diner order edits and table join requests execute inside the Ephemeral Rollup. When the round is prepared, state automatically commits to Mainnet L1 for verified MagicBlock VRF randomness.
           </p>
         </div>
 

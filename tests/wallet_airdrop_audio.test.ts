@@ -4,7 +4,7 @@ import { Keypair } from '@solana/web3.js';
 import { walletService } from '../src/services/walletService.ts';
 import { sound } from '../src/utils/audio.ts';
 
-describe('Devnet Wallet Airdrop & Audio API Protocol Tests', () => {
+describe('Mainnet Wallet Integration & Audio API Protocol Tests', () => {
   test('1. SoundEngine provides playClick, playSpin, playTick, playWinnerFanfare without error', () => {
     assert.strictEqual(typeof sound.playClick, 'function');
     assert.strictEqual(typeof sound.playSpin, 'function');
@@ -26,7 +26,7 @@ describe('Devnet Wallet Airdrop & Audio API Protocol Tests', () => {
 
     assert.strictEqual(result.success, false);
     assert.strictEqual(result.errorCode, 'NO_WALLET');
-    assert.match(result.error || '', /No Devnet wallet connected/i);
+    assert.match(result.error || '', /No wallet connected/i);
   });
 
   test('3. WalletService reports available standard Solana wallet adapters', () => {
@@ -37,21 +37,12 @@ describe('Devnet Wallet Airdrop & Audio API Protocol Tests', () => {
     assert.ok(wallets.some((w) => w.id === 'backpack'));
   });
 
-  test('4. Request Airdrop validates public key and handles RPC responses without hanging', async () => {
+  test('4. Request Airdrop strictly rejects on Solana Mainnet Beta without hanging', async () => {
     const testPubkey = Keypair.generate().publicKey.toBase58();
     const result = await walletService.requestAirdrop(testPubkey);
-    // In CI / Cloud container environment, the public Solana Devnet faucet either confirms or returns RATE_LIMITED / INSUFFICIENT_FAUCET / UNKNOWN
-    if (result.success) {
-      assert.ok(result.signature);
-      assert.ok(result.explorerUrl);
-      assert.match(result.explorerUrl, /explorer\.solana\.com\/tx\//);
-    } else {
-      assert.ok(result.error);
-      assert.ok(['RATE_LIMITED', 'INSUFFICIENT_FAUCET', 'RPC_UNAVAILABLE', 'UNKNOWN'].includes(result.errorCode || ''));
-      if (result.errorCode === 'RATE_LIMITED' || result.errorCode === 'INSUFFICIENT_FAUCET' || result.errorCode === 'UNKNOWN') {
-        assert.ok(result.faucetAlternativeUrl);
-      }
-    }
+    assert.strictEqual(result.success, false);
+    assert.strictEqual(result.errorCode, 'NOT_DEVNET');
+    assert.match(result.error || '', /not supported on Solana Mainnet Beta/i);
   });
 
   test('5. Disconnect resets wallet state cleanly', async () => {

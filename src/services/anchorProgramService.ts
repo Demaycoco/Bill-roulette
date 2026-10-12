@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 
 /**
  * Anchor IDL & Program specifications for the Bill Roulette protocol.
- * Program Target: Solana Devnet
+ * Program Target: Solana Mainnet Beta
  */
 export const BILL_ROULETTE_PROGRAM_ID = new PublicKey('Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq');
 export const MAGICBLOCK_VRF_PROGRAM_ID = new PublicKey('Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz');
@@ -261,10 +261,17 @@ export const BILL_ROULETTE_IDL = {
 
 class AnchorProgramService {
   /**
-   * Status of on-chain deployment target
+   * Status of on-chain deployment target on Solana Mainnet Beta
+   * Program: Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq
    */
+  public isProgramDeployedOnMainnet(): boolean {
+    // Verified on-chain: Account is not found on Solana Mainnet Beta (Genesis: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d).
+    // Blocker: Custom program must be deployed to Solana Mainnet Beta using Anchor/Solana CLI.
+    return false;
+  }
+
   public isProgramDeployedOnDevnet(): boolean {
-    return false; // Honest status: Anchor program is written and verified, pending Devnet deployment CLI
+    return false;
   }
 
   /**

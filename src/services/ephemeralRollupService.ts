@@ -21,9 +21,14 @@ export const MAGICBLOCK_UNDELEGATE_DISCRIMINATOR = new Uint8Array([
   196, 28, 41, 206, 48, 37, 51, 167,
 ]);
 
+export const MAGICBLOCK_ROUTER_MAINNET_RPC = 'https://router.magicblock.app';
+export const MAGICBLOCK_ER_MAINNET_RPC = 'https://mainnet.magicblock.app';
+export const BASE_SOLANA_MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
+
+// Backward-compatibility aliases for existing test harnesses
 export const MAGICBLOCK_ROUTER_DEVNET_RPC = 'https://devnet-router.magicblock.app';
 export const MAGICBLOCK_ER_DEVNET_RPC = 'https://devnet.magicblock.app';
-export const MAGICBLOCK_ER_US_RPC = 'https://devnet-us.magicblock.app';
+export const MAGICBLOCK_ER_US_RPC = 'https://mainnet-us.magicblock.app';
 export const BASE_SOLANA_DEVNET_RPC = 'https://api.devnet.solana.com';
 
 export const DEFAULT_EPHEMERAL_VALIDATOR = PublicKey.findProgramAddressSync(
@@ -215,7 +220,7 @@ class EphemeralRollupService {
   }
 
   /**
-   * Commit Ephemeral Rollup state snapshot back to Solana Devnet L1
+   * Commit Ephemeral Rollup state snapshot back to Solana Mainnet L1
    */
   public async commitRollupState(tableId: string): Promise<EphemeralSession> {
     const session = this.activeSessions.get(tableId);
@@ -240,7 +245,7 @@ class EphemeralRollupService {
   }
 
   /**
-   * Undelegate table from Ephemeral Rollup back to Solana Devnet L1
+   * Undelegate table from Ephemeral Rollup back to Solana Mainnet L1
    * Restores full base-layer ownership to Bill Roulette program before VRF round execution
    */
   public async undelegateTable(
@@ -263,7 +268,7 @@ class EphemeralRollupService {
     session.status = 'State synchronized';
     session.phase = 'RETURNED_TO_BASE';
     session.lastL1SettlementSlot = 328901000 + Math.floor(Math.random() * 5000);
-    session.isGasless = false; // Returned to Solana Devnet base layer, regular gas applies
+    session.isGasless = false; // Returned to Solana Mainnet base layer, regular gas applies
 
     this.notifyListeners(tableId, session);
     return session;
@@ -274,20 +279,20 @@ class EphemeralRollupService {
    * Ensures the relationship between a round and its randomness request is never broken
    */
   public async ensureSafeVrfEnvironment(tableId: string): Promise<{
-    mode: 'BASE_DEVNET_L1' | 'EPHEMERAL_ROLLUP';
+    mode: 'BASE_MAINNET_L1' | 'BASE_DEVNET_L1' | 'EPHEMERAL_ROLLUP';
     oracleQueue: PublicKey;
   }> {
     const session = this.activeSessions.get(tableId);
 
-    // If table is delegated, undelegate to L1 for standard Base Devnet VRF queue,
+    // If table is delegated, undelegate to L1 for standard Base Solana VRF queue,
     // guaranteeing authoritative base-layer settlement with zero state desync.
     if (session && session.isDelegated) {
       await this.undelegateTable(tableId);
     }
 
     return {
-      mode: 'BASE_DEVNET_L1',
-      oracleQueue: new PublicKey('96dZkn8N7W9vK6113824141414141414141414141414'), // Base Devnet Queue
+      mode: 'BASE_MAINNET_L1',
+      oracleQueue: new PublicKey('5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc'), // Base Mainnet Queue
     };
   }
 
@@ -370,9 +375,9 @@ class EphemeralRollupService {
       status: 'State synchronized',
       phase: 'RETURNED_TO_BASE',
       delegationProgramId: MAGICBLOCK_DELEGATION_PROGRAM_ID.toBase58(),
-      validator: 'Solana Devnet L1 Consensus',
-      ephemeralEndpoint: BASE_SOLANA_DEVNET_RPC,
-      routerEndpoint: BASE_SOLANA_DEVNET_RPC,
+      validator: 'Solana Mainnet L1 Consensus',
+      ephemeralEndpoint: BASE_SOLANA_MAINNET_RPC,
+      routerEndpoint: BASE_SOLANA_MAINNET_RPC,
       ephemeralSlot: 0,
       isGasless: false,
       latencyMs: 400,

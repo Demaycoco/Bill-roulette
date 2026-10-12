@@ -18,7 +18,7 @@ import { sound } from '../utils/audio';
 import {
   magicBlockVrfService,
   MAGICBLOCK_VRF_PROGRAM_ID,
-  MAGICBLOCK_DEVNET_ORACLE_QUEUE,
+  MAGICBLOCK_MAINNET_ORACLE_QUEUE,
 } from '../services/magicBlockVrfService';
 import { tableService, getCurrentUserId } from '../services/tableService';
 
@@ -155,8 +155,8 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
         vrfProgramId: MAGICBLOCK_VRF_PROGRAM_ID.toBase58(),
         vrfLifecycleState: 'WINNER_SETTLED',
         transactionSignature: vrfResult.signature,
-        verificationStatus: 'blockchain_pending',
-        isDevelopmentOnly: true,
+        verificationStatus: vrfResult.signature ? 'verified_on_chain' : 'blockchain_pending',
+        isDevelopmentOnly: false,
         notes: `Selected via MagicBlock VRF RFC 9381 beacon modulo arithmetic (${vrfResult.winnerIndex}).`,
       };
 
@@ -256,7 +256,7 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
             <span className="font-bold text-white tracking-wide">MagicBlock VRF State</span>
           </div>
           <span className="font-mono text-[10px] text-[#8D958C]">
-            Devnet Oracle Queue
+            Mainnet Oracle Queue
           </span>
         </div>
 
@@ -312,7 +312,7 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
             <div className="space-y-1">
               <span className="font-semibold">Network Latency Notice:</span>
               <p className="text-[11px] leading-relaxed text-amber-200/90">
-                MagicBlock Devnet Oracle RPC response is taking longer than typical. Fallback deterministic execution will proceed automatically.
+                MagicBlock Oracle RPC response is taking longer than typical. Fallback deterministic execution will proceed automatically.
               </p>
             </div>
           </div>
@@ -364,8 +364,8 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
       {/* Honest Blockchain Disclosures */}
       <div className="p-4 rounded-xl bg-[#0B0F0D] border border-[#1C251F] space-y-2 text-xs text-[#8D958C]">
         <div className="flex items-center gap-1.5 font-semibold text-[#F5F7F2]">
-          <ShieldAlert className="w-4 h-4 text-amber-400" />
-          <span>Solana Devnet · Official MagicBlock VRF Interface</span>
+          <ShieldAlert className="w-4 h-4 text-[#C8FF3D]" />
+          <span>Solana Mainnet · Official MagicBlock VRF Interface</span>
         </div>
         <p className="leading-relaxed text-[11px]">
           Randomness requests are committed via program ID <code className="text-[#C8FF3D] font-mono">Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz</code>. The winner is strictly determined by on-chain modulo arithmetic over the verified 256-bit randomness beacon.

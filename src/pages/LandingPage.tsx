@@ -17,7 +17,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4 sm:px-6 py-6 sm:py-12 max-w-4xl mx-auto">
-      {/* Devnet Status Bar */}
+      {/* Solana Mainnet Status Bar */}
       <div className="mb-6 flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[#0B0F0D] border border-[#1C251F] text-xs">
         <NetworkBadge />
         <span aria-hidden="true" className="text-[#2C3830]">·</span>
@@ -80,7 +80,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span className="font-display font-bold text-white text-base">Who Pays?</span>
             <span className="text-[#8D958C] text-xs mt-0.5">Spin to determine</span>
             <span className="mt-2 font-mono text-[11px] text-[#C8FF3D] bg-[#121814] px-2.5 py-0.5 rounded-md border border-[#1F2922]">
-              Solana Devnet
+              Solana Mainnet
             </span>
           </div>
 

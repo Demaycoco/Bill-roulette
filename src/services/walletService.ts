@@ -1,11 +1,19 @@
-import { Connection, PublicKey, LAMPORTS_PER_SOL, Keypair } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { WalletState, SupportedWalletId } from '../types';
 import { MAGICBLOCK_CONFIG } from '../config/magicblock';
-import { DEVNET_USDC_MINT } from '../utils/currency';
+import {
+  getAuthoritativeConnection,
+  getAuthoritativeRpcUrl,
+  confirmMainnetTransactionStrict,
+  assertMainnetCluster,
+  MAINNET_USDC_MINT,
+  SPL_TOKEN_PROGRAM_ID,
+  getMainnetExplorerTxUrl,
+} from '../config/solanaNetwork';
 
-export const SOLANA_DEVNET_RPC = MAGICBLOCK_CONFIG.solanaRpcUrl || 'https://api.devnet.solana.com';
-const STORAGE_BURNER_KEY = 'bill_roulette_devnet_burner_pk';
-const TOKEN_PROGRAM_ID_STR = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+export const SOLANA_MAINNET_RPC = getAuthoritativeRpcUrl();
+export const SOLANA_DEVNET_RPC = SOLANA_MAINNET_RPC; // Backward-compatibility alias
+const TOKEN_PROGRAM_ID_STR = SPL_TOKEN_PROGRAM_ID.toBase58();
 
 export interface WalletOption {
   id: SupportedWalletId;
@@ -106,44 +114,24 @@ class WalletService {
     balanceUsdcBaseUnits: null,
     isConnecting: false,
     error: null,
-    network: 'devnet',
+    network: 'mainnet-beta',
     isExternal: false,
   };
   private listeners: Set<WalletListener> = new Set();
-  private burnerKeypair: Keypair | null = null;
   private activeProvider: ExternalSolanaProvider | null = null;
 
   constructor() {
-    this.connection = new Connection(SOLANA_DEVNET_RPC, {
-      commitment: 'confirmed',
-      disableRetryOnRateLimit: true,
-    });
+    this.connection = getAuthoritativeConnection();
     this.initSavedState();
   }
 
   private initSavedState() {
-    if (typeof window === 'undefined') return;
-    try {
-      const savedBurner = localStorage.getItem(STORAGE_BURNER_KEY);
-      if (savedBurner) {
-        const secret = Uint8Array.from(JSON.parse(savedBurner));
-        this.burnerKeypair = Keypair.fromSecretKey(secret);
-      } else {
-        this.burnerKeypair = Keypair.generate();
-        localStorage.setItem(
-          STORAGE_BURNER_KEY,
-          JSON.stringify(Array.from(this.burnerKeypair.secretKey))
-        );
-      }
-      // Start in disconnected state so users explicitly connect external wallet
-      this.state.connected = false;
-      this.state.publicKey = null;
-      this.state.walletName = null;
-      this.state.walletId = null;
-      this.state.isExternal = false;
-    } catch {
-      // ignore
-    }
+    // Start in clean disconnected state so users explicitly connect standard external wallet
+    this.state.connected = false;
+    this.state.publicKey = null;
+    this.state.walletName = null;
+    this.state.walletId = null;
+    this.state.isExternal = false;
   }
 
   public getConnection(): Connection {
@@ -433,7 +421,7 @@ class WalletService {
       balanceLamports: null,
       isConnecting: false,
       error: null,
-      network: 'devnet',
+      network: 'mainnet-beta',
       isExternal: false,
     };
     this.emit();
@@ -458,7 +446,7 @@ class WalletService {
       return {
         success: false,
         errorCode: 'NO_WALLET',
-        error: 'No Devnet wallet connected. Please connect or launch a Devnet sandbox wallet.',
+        error: 'No wallet connected. Please connect your Solana wallet.',
         balanceRefreshed: false,
       };
     }
@@ -476,170 +464,17 @@ class WalletService {
       };
     }
 
-    // 2. Confirm cluster is Devnet
-    const isDevnet = this.state.network === 'devnet' || MAGICBLOCK_CONFIG.solanaCluster === 'devnet';
-    if (!isDevnet) {
-      return {
-        success: false,
-        errorCode: 'NOT_DEVNET',
-        error: 'Airdrop is supported strictly on Solana Devnet.',
-        balanceRefreshed: false,
-      };
-    }
-
-    // 3. Request supported amount of Devnet SOL (1 SOL = 1,000,000,000 lamports)
-    const airdropLamports = 1 * LAMPORTS_PER_SOL;
-    let signature: string;
-
-    try {
-      signature = await this.connection.requestAirdrop(pubkey, airdropLamports);
-    } catch (err: unknown) {
-      const errStr = err instanceof Error ? err.message : String(err);
-
-      if (
-        errStr.includes('429') ||
-        errStr.toLowerCase().includes('too many requests') ||
-        errStr.toLowerCase().includes('rate limit') ||
-        errStr.toLowerCase().includes('airdrop limit')
-      ) {
-        return {
-          success: false,
-          errorCode: 'RATE_LIMITED',
-          error:
-            "Solana Devnet faucet daily rate limit reached for this IP or wallet. Please visit https://faucet.solana.com or https://solfaucet.com for alternative sources.",
-          faucetAlternativeUrl: 'https://faucet.solana.com',
-          balanceRefreshed: false,
-        };
-      }
-
-      if (
-        errStr.includes('-32603') ||
-        errStr.toLowerCase().includes('internal error') ||
-        errStr.toLowerCase().includes('run dry') ||
-        errStr.toLowerCase().includes('insufficient')
-      ) {
-        return {
-          success: false,
-          errorCode: 'INSUFFICIENT_FAUCET',
-          error:
-            "The public Solana Devnet faucet is currently depleted or rejecting requests. You can request test SOL directly from https://faucet.solana.com or https://solfaucet.com.",
-          faucetAlternativeUrl: 'https://faucet.solana.com',
-          balanceRefreshed: false,
-        };
-      }
-
-      if (
-        errStr.toLowerCase().includes('failed to fetch') ||
-        errStr.toLowerCase().includes('network') ||
-        errStr.toLowerCase().includes('econnrefused')
-      ) {
-        return {
-          success: false,
-          errorCode: 'RPC_UNAVAILABLE',
-          error: 'Solana Devnet RPC endpoint is temporarily unreachable. Please check your internet connection.',
-          balanceRefreshed: false,
-        };
-      }
-
-      return {
-        success: false,
-        errorCode: 'UNKNOWN',
-        error: `Devnet airdrop request failed: ${errStr.slice(0, 150)}`,
-        faucetAlternativeUrl: 'https://faucet.solana.com',
-        balanceRefreshed: false,
-      };
-    }
-
-    const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-
-    // 4 & 5. Wait for transaction confirmation
-    try {
-      const latestBlockhash = await this.connection.getLatestBlockhash('confirmed');
-      const confirmation = await this.connection.confirmTransaction(
-        {
-          signature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-        },
-        'confirmed'
-      );
-
-      if (confirmation.value.err) {
-        return {
-          success: false,
-          signature,
-          explorerUrl,
-          errorCode: 'TRANSACTION_FAILED',
-          error: `Airdrop transaction failed on-chain: ${JSON.stringify(confirmation.value.err)}`,
-          balanceRefreshed: false,
-        };
-      }
-    } catch {
-      // Timeout fallback: verify via getSignatureStatus
-      try {
-        const status = await this.connection.getSignatureStatus(signature, {
-          searchTransactionHistory: true,
-        });
-        const isConfirmed =
-          status?.value?.confirmationStatus === 'confirmed' ||
-          status?.value?.confirmationStatus === 'finalized';
-
-        if (!isConfirmed) {
-          return {
-            success: false,
-            signature,
-            explorerUrl,
-            errorCode: 'CONFIRMATION_TIMEOUT',
-            error:
-              'Airdrop transaction was broadcast, but confirmation timed out on Devnet. Verify status via Solana Explorer.',
-            balanceRefreshed: false,
-          };
-        }
-      } catch {
-        return {
-          success: false,
-          signature,
-          explorerUrl,
-          errorCode: 'CONFIRMATION_TIMEOUT',
-          error:
-            'Confirmation timed out. The airdrop transaction was submitted; check the Solana Explorer link.',
-          balanceRefreshed: false,
-        };
-      }
-    }
-
-    // 6. Fetch updated balance from RPC
-    let balanceRefreshed = false;
-    let currentBalanceSol: number | undefined;
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const updatedLamports = await this.connection.getBalance(pubkey, 'confirmed');
-        if (this.state.publicKey && pubkey.toBase58() === this.state.publicKey) {
-          this.state.balanceLamports = updatedLamports;
-          this.emit();
-        }
-        balanceRefreshed = true;
-        currentBalanceSol = updatedLamports / LAMPORTS_PER_SOL;
-        break;
-      } catch {
-        if (attempt < 2) {
-          await new Promise((r) => setTimeout(r, 600));
-        }
-      }
-    }
-
+    // 2. Reject: Solana Mainnet Beta does not support airdrops
     return {
-      success: true,
-      signature,
-      explorerUrl,
-      balanceRefreshed,
-      currentBalanceSol,
+      success: false,
+      errorCode: 'NOT_DEVNET',
+      error: 'Airdrop is not supported on Solana Mainnet Beta. Please fund your connected wallet with genuine SOL or Circle USDC.',
+      balanceRefreshed: false,
     };
   }
 
   /**
-   * Refresh both native SOL and authentic Circle Devnet USDC balances from Solana RPC
+   * Refresh both native SOL and authentic Circle Mainnet USDC balances from Solana RPC
    */
   public async refreshBalance(): Promise<{ lamports: number | null; usdcBaseUnits: number | null }> {
     if (!this.state.publicKey) return { lamports: null, usdcBaseUnits: null };
@@ -647,14 +482,17 @@ class WalletService {
     try {
       const pubkey = new PublicKey(this.state.publicKey);
       
-      // 1. Refresh Native SOL lamports
+      // 1. Validate cluster is Mainnet Beta
+      await assertMainnetCluster(this.connection);
+
+      // 2. Refresh Native SOL lamports
       const lamports = await this.connection.getBalance(pubkey, 'confirmed');
       this.state.balanceLamports = lamports;
 
-      // 2. Refresh authentic Circle Devnet USDC token account
+      // 3. Refresh authentic Circle Mainnet USDC token account
       try {
         const tokenProgramId = new PublicKey(TOKEN_PROGRAM_ID_STR);
-        const usdcMintPubkey = new PublicKey(DEVNET_USDC_MINT);
+        const usdcMintPubkey = new PublicKey(MAINNET_USDC_MINT);
         const tokenAccounts = await this.connection.getParsedTokenAccountsByOwner(
           pubkey,
           { programId: tokenProgramId },
@@ -664,7 +502,7 @@ class WalletService {
         let totalUsdcMicro = 0;
         for (const item of tokenAccounts.value) {
           const parsed = item.account.data.parsed?.info;
-          if (parsed && parsed.mint === DEVNET_USDC_MINT) {
+          if (parsed && parsed.mint === MAINNET_USDC_MINT) {
             const rawAmount = parsed.tokenAmount?.amount;
             if (rawAmount) {
               totalUsdcMicro += Number(rawAmount);
@@ -672,8 +510,7 @@ class WalletService {
           }
         }
         this.state.balanceUsdcBaseUnits = totalUsdcMicro;
-      } catch (tokenErr) {
-        // Fallback: If token account lookup fails or is rate-limited, keep previous or default to 0
+      } catch {
         if (this.state.balanceUsdcBaseUnits === null) {
           this.state.balanceUsdcBaseUnits = 0;
         }
@@ -682,28 +519,11 @@ class WalletService {
       this.emit();
       return { lamports, usdcBaseUnits: this.state.balanceUsdcBaseUnits ?? null };
     } catch (err: unknown) {
-      console.warn('Failed to refresh Devnet balance from RPC:', err);
+      console.warn('Failed to refresh Solana balance from RPC:', err);
       return {
         lamports: this.state.balanceLamports,
         usdcBaseUnits: this.state.balanceUsdcBaseUnits ?? null,
       };
-    }
-  }
-
-  public getDevnetKeypair(): Keypair | null {
-    return this.burnerKeypair;
-  }
-
-  public getInternalDevnetPublicKey(): string | null {
-    return this.burnerKeypair ? this.burnerKeypair.publicKey.toBase58() : null;
-  }
-
-  public async getInternalDevnetBalance(): Promise<number | null> {
-    if (!this.burnerKeypair) return null;
-    try {
-      return await this.connection.getBalance(this.burnerKeypair.publicKey, 'confirmed');
-    } catch {
-      return null;
     }
   }
 
@@ -715,14 +535,17 @@ class WalletService {
     transaction: import('@solana/web3.js').Transaction
   ): Promise<{ signature: string }> {
     if (!this.state.connected || !this.state.publicKey) {
-      throw new Error('Wallet not connected. Please connect your Solana Devnet wallet.');
+      throw new Error('Wallet not connected. Please connect your Solana wallet.');
     }
 
     const externalProvider = this.activeProvider || (typeof window !== 'undefined' ? (window as any).solana : null);
 
-    // 1. If using installed browser extension (Phantom, Solflare, Backpack)
-    if (externalProvider && (this.state.isExternal || !this.burnerKeypair)) {
+    // If using connected wallet extension or provider (Phantom, Solflare, Backpack, Standard)
+    if (externalProvider) {
       try {
+        // Requirement 10 & 11: Cryptographically validate connected RPC is Mainnet Beta before executing
+        await assertMainnetCluster(this.connection);
+
         const { blockhash, lastValidBlockHeight } =
           await this.connection.getLatestBlockhash('confirmed');
         transaction.recentBlockhash = blockhash;
@@ -730,23 +553,28 @@ class WalletService {
 
         if (typeof externalProvider.signAndSendTransaction === 'function') {
           const res = await externalProvider.signAndSendTransaction(transaction);
-          await this.connection.confirmTransaction(
-            { signature: res.signature, blockhash, lastValidBlockHeight },
-            'confirmed'
-          );
+          // Requirement 12 & 13: Confirm transaction strictly and verify on-chain success
+          await confirmMainnetTransactionStrict(this.connection, {
+            signature: res.signature,
+            blockhash,
+            lastValidBlockHeight,
+          });
           await this.refreshBalance();
           return { signature: res.signature };
         } else if (typeof externalProvider.signTransaction === 'function') {
           const signed = await externalProvider.signTransaction(transaction);
           const rawTx = signed.serialize();
+          // Requirement 14: Preserve transaction simulation and preflight validation
           const signature = await this.connection.sendRawTransaction(rawTx, {
             skipPreflight: false,
             preflightCommitment: 'confirmed',
           });
-          await this.connection.confirmTransaction(
-            { signature, blockhash, lastValidBlockHeight },
-            'confirmed'
-          );
+          // Requirement 12 & 13: Confirm transaction strictly and verify on-chain success
+          await confirmMainnetTransactionStrict(this.connection, {
+            signature,
+            blockhash,
+            lastValidBlockHeight,
+          });
           await this.refreshBalance();
           return { signature };
         }
@@ -757,36 +585,6 @@ class WalletService {
           throw new Error('Transaction was cancelled by user in wallet.');
         }
         throw new Error(msg || 'Transaction signing failed in external wallet.');
-      }
-    }
-
-    // 2. If using Devnet Sandbox keypair
-    if (this.burnerKeypair) {
-      try {
-        const { blockhash, lastValidBlockHeight } =
-          await this.connection.getLatestBlockhash('confirmed');
-        transaction.recentBlockhash = blockhash;
-        transaction.feePayer = this.burnerKeypair.publicKey;
-        transaction.sign(this.burnerKeypair);
-
-        const rawTx = transaction.serialize();
-        const signature = await this.connection.sendRawTransaction(rawTx, {
-          skipPreflight: false,
-          preflightCommitment: 'confirmed',
-        });
-
-        await this.connection.confirmTransaction(
-          { signature, blockhash, lastValidBlockHeight },
-          'confirmed'
-        );
-        await this.refreshBalance();
-        return { signature };
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (message.includes('0x1')) {
-          throw new Error('Insufficient funds for transaction fees on Devnet. Request 1 SOL airdrop in Wallet page.');
-        }
-        throw new Error(`Sandbox transaction submission: ${message}`);
       }
     }
 

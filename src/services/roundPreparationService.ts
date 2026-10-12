@@ -11,7 +11,7 @@ import { calculateTableTotalCents } from '../utils/currency';
 /**
  * Creates a deterministic cryptographic SHA-256 hash digest of the round inputs.
  * This canonical representation can later be passed to the on-chain Anchor program
- * or verified against MagicBlock VRF proof receipts on Solana Devnet.
+ * or verified against MagicBlock VRF proof receipts on Solana Mainnet Beta.
  */
 export async function createDeterministicRoundDigest(inputs: {
   roundId: string;

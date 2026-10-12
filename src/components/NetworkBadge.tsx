@@ -8,7 +8,7 @@ export function NetworkBadge() {
   useEffect(() => {
     let mounted = true;
     solanaTransactionService
-      .getDevnetHealth()
+      .getClusterHealth()
       .then((res) => {
         if (!mounted) return;
         if (res.ok) {
@@ -38,7 +38,7 @@ export function NetworkBadge() {
               : 'bg-[#ff5a5f]'
           }`}
         />
-        Solana Devnet
+        Solana Mainnet
       </span>
       {slot && (
         <>

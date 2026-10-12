@@ -76,7 +76,7 @@ export interface Table {
 export type VerificationState =
   | 'blockchain_pending'      // Standard state when contract is not yet deployed on-chain
   | 'vrf_oracle_requested'    // MagicBlock VRF Oracle CPI call in flight
-  | 'verified_on_chain'       // Validated Devnet tx signature with program proof
+  | 'verified_on_chain'       // Validated Solana Mainnet tx signature with program proof
   | 'dev_cryptographic_test'; // Local deterministic cryptographic seed for sandbox test
 
 export interface FrozenParticipant {
@@ -149,7 +149,7 @@ export interface SolanaTransactionInfo {
   signature: string;
   slot?: number;
   confirmed: boolean;
-  cluster: 'devnet';
+  cluster: 'mainnet-beta';
   explorerUrl?: string;
   programId: string;
 }
@@ -165,6 +165,6 @@ export interface WalletState {
   balanceUsdcBaseUnits?: number | null;
   isConnecting: boolean;
   error: string | null;
-  network: 'devnet';
+  network: 'mainnet-beta';
   isExternal?: boolean;
 }

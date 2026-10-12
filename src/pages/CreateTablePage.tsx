@@ -6,7 +6,7 @@ import { CurrencyConverter } from '../components/CurrencyConverter';
 import {
   parseToBaseUnits,
   formatBaseUnits,
-  DEVNET_USDC_MINT,
+  MAINNET_USDC_MINT,
   SUPPORTED_CURRENCIES,
   getCurrencyDecimals,
 } from '../utils/currency';
@@ -176,7 +176,7 @@ export const CreateTablePage: React.FC<CreateTablePageProps> = ({
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-semibold text-[#F5F7F2]">Table Currency</label>
                 <span className="text-[11px] font-mono text-[#8D958C]">
-                  {currency === 'SOL' ? '9 decimals (lamports)' : '6 decimals (Circle Devnet USDC)'}
+                  {currency === 'SOL' ? '9 decimals (lamports)' : '6 decimals (Circle Mainnet USDC)'}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -233,10 +233,10 @@ export const CreateTablePage: React.FC<CreateTablePageProps> = ({
                 <div className="p-2.5 rounded-lg bg-[#050505] border border-[#1F2922] flex items-center justify-between text-[11px] text-[#8D958C]">
                   <span className="flex items-center gap-1.5 text-zinc-300">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#C8FF3D]" />
-                    <span>Devnet Verified Mint:</span>
+                    <span>Mainnet Verified Mint:</span>
                   </span>
                   <span className="font-mono text-[#C8FF3D] text-[10px]">
-                    4zMMC...ncDU (Circle)
+                    EPjFW...TDt1v (Circle)
                   </span>
                 </div>
               )}
@@ -350,7 +350,7 @@ export const CreateTablePage: React.FC<CreateTablePageProps> = ({
 
             {/* Blockchain Storage Disclosure */}
             <div className="p-3.5 rounded-xl bg-[#0B0F0D] border border-[#1C251F] text-[11px] text-[#8D958C]">
-              <span className="font-semibold text-[#F5F7F2]">Architecture Note:</span> Table draft state is managed in low-latency ephemeral storage. The final settlement and VRF randomness result are recorded and verified on Solana Devnet when the spin executes.
+              <span className="font-semibold text-[#F5F7F2]">Architecture Note:</span> Table draft state is managed in low-latency ephemeral storage. The final settlement and VRF randomness result are recorded and verified on Solana Mainnet Beta when the spin executes.
             </div>
 
             {/* Submit Button */}

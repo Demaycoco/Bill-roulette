@@ -44,10 +44,11 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   USDC: '$',
 };
 
-// Official Solana Devnet USDC Mint (Circle-backed official Devnet token)
-export const DEVNET_USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
-// Mainnet-beta USDC Mint for reference / network verification check
+// Official Solana Mainnet-Beta USDC Mint (Circle-backed official production token)
 export const MAINNET_USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+export const USDC_MINT = MAINNET_USDC_MINT;
+// Alias for backward compatibility
+export const DEVNET_USDC_MINT = MAINNET_USDC_MINT;
 
 // Maximum order amount in base units for compatibility (10,000 SOL or 500,000 USDC)
 export const MAX_ORDER_AMOUNT_CENTS = 10_000 * 1_000_000_000;

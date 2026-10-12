@@ -36,11 +36,11 @@ class TransactionVerificationService {
         status: 'blockchain_pending',
         displayBadge: 'Blockchain Integration Pending',
         badgeVariant: 'pending',
-        details: 'Anchor program & MagicBlock VRF contracts are prepared for Devnet deployment. Result determined via cryptographic client seed.',
+        details: 'Anchor program & MagicBlock VRF contracts are configured for Solana Mainnet Beta deployment. Result determined via cryptographic client seed.',
       };
     }
 
-    // A signature was provided — check with Solana Devnet RPC
+    // A signature was provided — check with Solana Mainnet RPC
     try {
       const txInfo = await solanaTransactionService.verifyTransactionOnChain(round.transactionSignature);
 
@@ -48,9 +48,9 @@ class TransactionVerificationService {
         return {
           isVerifiedOnChain: true,
           status: 'verified_on_chain',
-          displayBadge: 'Verified on Devnet',
+          displayBadge: 'Verified on Mainnet',
           badgeVariant: 'success',
-          details: `Confirmed on Solana Devnet at slot #${txInfo.slot}. Verified on-chain.`,
+          details: `Confirmed on Solana Mainnet Beta at slot #${txInfo.slot}. Verified on-chain.`,
           explorerUrl: txInfo.explorerUrl,
         };
       } else {
@@ -59,7 +59,7 @@ class TransactionVerificationService {
           status: 'blockchain_pending',
           displayBadge: 'Pending RPC Confirmation',
           badgeVariant: 'warning',
-          details: 'Transaction submitted to Solana Devnet, awaiting block finalization.',
+          details: 'Transaction submitted to Solana Mainnet Beta, awaiting block finalization.',
           explorerUrl: solanaTransactionService.getExplorerUrl(round.transactionSignature),
         };
       }
@@ -69,7 +69,7 @@ class TransactionVerificationService {
         status: 'blockchain_pending',
         displayBadge: 'Verification Unreachable',
         badgeVariant: 'warning',
-        details: 'Solana Devnet RPC could not be reached to verify this signature.',
+        details: 'Solana Mainnet RPC could not be reached to verify this signature.',
       };
     }
   }

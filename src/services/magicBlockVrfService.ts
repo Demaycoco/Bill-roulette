@@ -14,15 +14,14 @@ import {
 import { walletService } from './walletService';
 
 /**
- * Official MagicBlock Solana VRF Program Configuration on Solana Devnet
- * Program: AVSkxphdf7eLT8iNoD5EUEkEpgrTegukoViQ1VFvn7qg
- * Consumer Contract: Cz9eXYRuhR7fxmhEvYRY5X19qhybJ29wpaervEHHz32s
- * Queue: CUCKsxfTbfDtx7jkKvZYBv8T7fsYKvz2SouqgdnUX5d5
+ * Official MagicBlock Solana VRF Program Configuration on Solana Mainnet Beta
+ * Program ID: Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz
  */
 export const MAGICBLOCK_VRF_PROGRAM_ID = new PublicKey(MAGICBLOCK_VRF_PROGRAM_ID_STR);
 export const MAGICBLOCK_CONSUMER_PROGRAM_ID = new PublicKey(MAGICBLOCK_CONSUMER_PROGRAM_ID_STR);
-export const MAGICBLOCK_DEVNET_ORACLE_QUEUE = new PublicKey(MAGICBLOCK_CONFIG.defaultQueueAddress);
-export const MAGICBLOCK_EPHEMERAL_QUEUE = new PublicKey('D7ck4iL1oyncNhKheb1TUgpV7V7axYWVQ6fw26EPKp1h');
+export const MAGICBLOCK_MAINNET_ORACLE_QUEUE = new PublicKey(MAGICBLOCK_CONFIG.defaultQueueAddress);
+export const MAGICBLOCK_DEVNET_ORACLE_QUEUE = MAGICBLOCK_MAINNET_ORACLE_QUEUE;
+export const MAGICBLOCK_EPHEMERAL_QUEUE = new PublicKey('5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc');
 
 
 export interface VrfExecutionResult {
@@ -160,9 +159,8 @@ export class MagicBlockVrfService {
   }
 
   /**
-   * Builds the official MagicBlock request_randomness instruction for Solana Devnet.
-   * Invokes consumer program Cz9eXYRuhR7fxmhEvYRY5X19qhybJ29wpaervEHHz32s
-   * which executes CPI into MagicBlock VRF program AVSkxphdf7eLT8iNoD5EUEkEpgrTegukoViQ1VFvn7qg.
+   * Builds the official MagicBlock request_randomness instruction for Solana Mainnet Beta.
+   * Invokes program Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz.
    */
   public createRequestRandomnessInstruction(
     payer: PublicKey,
@@ -184,7 +182,7 @@ export class MagicBlockVrfService {
       keys: [
         { pubkey: payer, isSigner: true, isWritable: true },
         { pubkey: identityPda, isSigner: false, isWritable: false },
-        { pubkey: MAGICBLOCK_DEVNET_ORACLE_QUEUE, isSigner: false, isWritable: true },
+        { pubkey: MAGICBLOCK_MAINNET_ORACLE_QUEUE, isSigner: false, isWritable: true },
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
         { pubkey: SYSVAR_SLOT_HASHES_PUBKEY, isSigner: false, isWritable: false },
         { pubkey: MAGICBLOCK_VRF_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -196,7 +194,7 @@ export class MagicBlockVrfService {
   /**
    * Full VRF Lifecycle execution for the application.
    * 1. Generates 32-byte client seed.
-   * 2. Submits real request_randomness transaction to MagicBlock VRF program on Solana Devnet.
+   * 2. Submits real request_randomness transaction to MagicBlock VRF program on Solana Mainnet Beta.
    * 3. Awaits on-chain confirmation and retrieves real transaction signature.
    * 4. Calculates authoritative winner index matching on-chain program state.
    */
@@ -226,7 +224,7 @@ export class MagicBlockVrfService {
       try {
         onStateChange?.(
           'VRF_REQUESTED',
-          'Submitting request_randomness instruction to MagicBlock VRF on Solana Devnet...'
+          'Submitting request_randomness instruction to MagicBlock VRF on Solana Mainnet...'
         );
 
         const payerPubkey = new PublicKey(activeWalletPubkey);
@@ -239,7 +237,7 @@ export class MagicBlockVrfService {
 
         onStateChange?.(
           'AWAITING_CALLBACK',
-          `VRF Request confirmed on Devnet (${signature.slice(0, 8)}...). Deriving verified beacon...`
+          `VRF Request confirmed on Mainnet (${signature.slice(0, 8)}...). Deriving verified beacon...`
         );
 
         // Derive deterministic beacon from confirmed on-chain transaction signature + client seed
@@ -253,7 +251,7 @@ export class MagicBlockVrfService {
         console.warn('VRF on-chain transaction prompt note:', errorMsg);
         onStateChange?.(
           'AWAITING_CALLBACK',
-          `Devnet note: ${errorMsg.slice(0, 60)}. Deriving cryptographic client seed...`
+          `Solana note: ${errorMsg.slice(0, 60)}. Deriving cryptographic client seed...`
         );
       }
     }
@@ -313,8 +311,12 @@ export class MagicBlockVrfService {
   /**
    * Status of MagicBlock VRF live deployment
    */
+  public isOracleLiveOnMainnet(): boolean {
+    return true; // Live on Mainnet: Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz
+  }
+
   public isOracleLiveOnDevnet(): boolean {
-    return true; // Live on Devnet: Cz9eXYRuhR7fxmhEvYRY5X19qhybJ29wpaervEHHz32s & AVSkxphdf7eLT8iNoD5EUEkEpgrTegukoViQ1VFvn7qg
+    return true;
   }
 }
 
