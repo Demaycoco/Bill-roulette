@@ -256,7 +256,7 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
             <span className="font-bold text-white tracking-wide">MagicBlock VRF State</span>
           </div>
           <span className="font-mono text-[10px] text-[#8D958C]">
-            Mainnet Oracle Queue
+            Devnet Oracle Queue
           </span>
         </div>
 
@@ -365,7 +365,7 @@ export const RoulettePage: React.FC<RoulettePageProps> = ({
       <div className="p-4 rounded-xl bg-[#0B0F0D] border border-[#1C251F] space-y-2 text-xs text-[#8D958C]">
         <div className="flex items-center gap-1.5 font-semibold text-[#F5F7F2]">
           <ShieldAlert className="w-4 h-4 text-[#C8FF3D]" />
-          <span>Solana Mainnet · Official MagicBlock VRF Interface</span>
+          <span>Solana Devnet · Official MagicBlock VRF Interface</span>
         </div>
         <p className="leading-relaxed text-[11px]">
           Randomness requests are committed via program ID <code className="text-[#C8FF3D] font-mono">Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz</code>. The winner is strictly determined by on-chain modulo arithmetic over the verified 256-bit randomness beacon.

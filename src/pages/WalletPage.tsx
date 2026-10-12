@@ -31,6 +31,22 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [connectingId, setConnectingId] = useState<SupportedWalletId | null>(null);
+  const [isAirdropping, setIsAirdropping] = useState(false);
+  const [airdropFeedback, setAirdropFeedback] = useState<{ msg: string; success: boolean } | null>(null);
+
+  const handleRequestAirdrop = async () => {
+    sound.playClick();
+    if (!walletState.publicKey || isAirdropping) return;
+    setIsAirdropping(true);
+    setAirdropFeedback(null);
+    const res = await walletService.requestAirdrop();
+    setIsAirdropping(false);
+    if (res.success) {
+      setAirdropFeedback({ msg: 'Received 1 Devnet SOL!', success: true });
+    } else {
+      setAirdropFeedback({ msg: res.error || 'Airdrop rate limit reached. Please use faucet.solana.com', success: false });
+    }
+  };
 
   const handleCopyAddress = async (address: string) => {
     sound.playClick();
@@ -86,10 +102,10 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
 
       <div>
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-          Solana Mainnet Wallet
+          Solana Devnet Wallet
         </h1>
         <p className="text-sm text-zinc-400 mt-1">
-          Manage your Solana account for real check settlements and verifiable spins.
+          Manage your Solana Devnet account for real check settlements and verifiable spins.
         </p>
       </div>
 
@@ -97,6 +113,23 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
         <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
           <span>{walletState.error}</span>
+        </div>
+      )}
+
+      {airdropFeedback && (
+        <div
+          className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
+            airdropFeedback.success
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+          }`}
+        >
+          {airdropFeedback.success ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          )}
+          <span>{airdropFeedback.msg}</span>
         </div>
       )}
 
@@ -116,7 +149,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
                 </span>
               </div>
               <span className="text-[11px] font-mono text-[#8D958C] bg-[#121814] border border-[#1F2922] px-2 py-0.5 rounded">
-                Solana Mainnet
+                Solana Devnet
               </span>
             </div>
 
@@ -139,11 +172,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
               </button>
             </div>
 
-            {/* Balances Box (Native SOL and Circle Mainnet USDC) */}
+            {/* Balances Box (Native SOL and Circle Devnet USDC) */}
             <div className="p-4 rounded-xl bg-gradient-to-r from-[#050505] to-[#121814] border border-[#1F2922] space-y-3.5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-wider text-[#8D958C] font-semibold">
-                  Solana Mainnet Balances
+                  Solana Devnet Balances
                 </span>
                 <button
                   onClick={handleRefreshBalance}
@@ -181,11 +214,11 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
                 </div>
               </div>
 
-              {/* Mainnet Mint Verification Tag */}
+              {/* Devnet Mint Verification Tag */}
               <div className="p-2.5 rounded-lg bg-[#0B0F0D] border border-[#1C251F] flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5 text-zinc-300">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#C8FF3D] shrink-0" />
-                  <span>Mainnet USDC Mint Verified</span>
+                  <span>Devnet USDC Mint Verified</span>
                 </div>
                 <span className="font-mono text-[10px] text-[#8D958C]">
                   {MAINNET_USDC_MINT.slice(0, 4)}...{MAINNET_USDC_MINT.slice(-4)}
@@ -193,13 +226,26 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
               </div>
             </div>
 
-            {/* Mainnet Readiness Notice */}
+            {/* Devnet Airdrop Action Button */}
             <div className="p-3.5 rounded-xl bg-[#121814] border border-[#1F2922] flex items-center justify-between text-xs text-[#8D958C]">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#C8FF3D]" />
-                <span className="text-[#F5F7F2] font-semibold">Solana Mainnet Beta</span>
+                <Coins className="w-4 h-4 text-[#C8FF3D]" />
+                <span className="text-[#F5F7F2] font-semibold">Devnet Faucet Helper</span>
               </div>
-              <span className="font-mono text-[11px] text-[#C8FF3D]">Production Ready</span>
+              <button
+                onClick={handleRequestAirdrop}
+                disabled={isAirdropping}
+                className="px-3 py-1.5 rounded-lg bg-[#C8FF3D] hover:bg-[#bbf330] text-[#050505] font-semibold font-mono text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isAirdropping ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Requesting...</span>
+                  </>
+                ) : (
+                  <span>+ 1 SOL Airdrop</span>
+                )}
+              </button>
             </div>
 
             {/* Explorer Link */}
@@ -368,7 +414,7 @@ export const WalletPage: React.FC<WalletPageProps> = ({ walletState, onBack }) =
         <div className="space-y-1">
           <span className="font-semibold text-[#F5F7F2]">Security Guarantee</span>
           <p className="leading-relaxed text-[11px]">
-            Bill Roulette never requests, accesses, or stores private keys or seed phrases. All interactions adhere to standard Solana wallet adapter protocols targeting Solana Mainnet Beta.
+            Bill Roulette never requests, accesses, or stores private keys or seed phrases. All interactions adhere to standard Solana wallet adapter protocols targeting Solana Devnet.
           </p>
         </div>
       </div>

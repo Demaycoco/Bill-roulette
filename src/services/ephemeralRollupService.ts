@@ -144,8 +144,8 @@ class EphemeralRollupService {
       phase: 'DELEGATED',
       delegationProgramId: MAGICBLOCK_DELEGATION_PROGRAM_ID.toBase58(),
       validator: DEFAULT_EPHEMERAL_VALIDATOR.toBase58(),
-      ephemeralEndpoint: MAGICBLOCK_ER_DEVNET_RPC,
-      routerEndpoint: MAGICBLOCK_ROUTER_DEVNET_RPC,
+      ephemeralEndpoint: MAGICBLOCK_ER_MAINNET_RPC,
+      routerEndpoint: MAGICBLOCK_ROUTER_MAINNET_RPC,
       ephemeralSlot: 100,
       isGasless: true,
       latencyMs: this.baseLatencyMs,
@@ -279,7 +279,7 @@ class EphemeralRollupService {
    * Ensures the relationship between a round and its randomness request is never broken
    */
   public async ensureSafeVrfEnvironment(tableId: string): Promise<{
-    mode: 'BASE_MAINNET_L1' | 'BASE_DEVNET_L1' | 'EPHEMERAL_ROLLUP';
+    mode: 'BASE_MAINNET_L1' | 'EPHEMERAL_ROLLUP';
     oracleQueue: PublicKey;
   }> {
     const session = this.activeSessions.get(tableId);
@@ -308,7 +308,7 @@ class EphemeralRollupService {
 
       return {
         isHealthy: true,
-        activeEndpoint: MAGICBLOCK_ROUTER_DEVNET_RPC,
+        activeEndpoint: MAGICBLOCK_ROUTER_MAINNET_RPC,
         latencyMs: Math.max(2, latencyMs),
         ephemeralSlot: 1048576,
         validatorAddress: DEFAULT_EPHEMERAL_VALIDATOR.toBase58(),
@@ -316,7 +316,7 @@ class EphemeralRollupService {
     } catch {
       return {
         isHealthy: false,
-        activeEndpoint: MAGICBLOCK_ROUTER_DEVNET_RPC,
+        activeEndpoint: MAGICBLOCK_ROUTER_MAINNET_RPC,
         latencyMs: 999,
         ephemeralSlot: 0,
         validatorAddress: DEFAULT_EPHEMERAL_VALIDATOR.toBase58(),

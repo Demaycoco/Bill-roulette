@@ -12,24 +12,29 @@ import { Connection, Commitment, PublicKey } from '@solana/web3.js';
  * - Cluster genesis hash cryptographic validation
  */
 
-export const SOLANA_CLUSTER = 'mainnet-beta' as const;
+export const SOLANA_CLUSTER = 'devnet' as const;
 export type SolanaCluster = typeof SOLANA_CLUSTER;
 
-// Official Solana Mainnet Beta Genesis Hash
-export const SOLANA_MAINNET_GENESIS_HASH = '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d';
+// Official Solana Devnet Genesis Hash
+export const SOLANA_DEVNET_GENESIS_HASH = 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG';
+export const SOLANA_MAINNET_GENESIS_HASH = SOLANA_DEVNET_GENESIS_HASH;
 
-// Official Fallback RPC & WebSocket Endpoints
-export const OFFICIAL_MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
-export const OFFICIAL_MAINNET_WSS = 'wss://api.mainnet-beta.solana.com';
+// Official Fallback RPC & WebSocket Endpoints for Devnet
+export const OFFICIAL_DEVNET_RPC = 'https://api.devnet.solana.com';
+export const OFFICIAL_DEVNET_WSS = 'wss://api.devnet.solana.com';
+export const OFFICIAL_MAINNET_RPC = OFFICIAL_DEVNET_RPC;
+export const OFFICIAL_MAINNET_WSS = OFFICIAL_DEVNET_WSS;
 
-// Verified Mainnet Token & Core Program Addresses
+// Verified Devnet Token & Core Program Addresses
 export const SPL_TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-export const MAINNET_USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+export const DEVNET_USDC_MINT = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+export const MAINNET_USDC_MINT = DEVNET_USDC_MINT;
 
-// MagicBlock Mainnet Program IDs & Queue (Verified on Solana Mainnet Beta)
+// MagicBlock Devnet/Mainnet Program IDs & Queue (Verified on Solana Devnet)
 export const MAGICBLOCK_VRF_MAINNET_PROGRAM_ID = new PublicKey('Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz');
 export const MAGICBLOCK_DELEGATION_MAINNET_PROGRAM_ID = new PublicKey('DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh');
 export const MAGICBLOCK_MAINNET_QUEUE = new PublicKey('5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc');
+export const MAGICBLOCK_DEVNET_QUEUE = MAGICBLOCK_MAINNET_QUEUE;
 
 // Custom Bill Roulette Anchor Program (Requires Mainnet deployment)
 export const BILL_ROULETTE_PROGRAM_ID_STR =
@@ -49,25 +54,19 @@ export function getAuthoritativeRpcUrl(): string {
 
   if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
     envRpc =
-      (import.meta as any).env.VITE_SOLANA_MAINNET_RPC_URL ||
+      (import.meta as any).env.VITE_SOLANA_DEVNET_RPC_URL ||
       (import.meta as any).env.VITE_SOLANA_RPC_URL;
   }
 
   if (!envRpc && typeof process !== 'undefined' && process.env) {
     envRpc =
-      process.env.SOLANA_MAINNET_RPC_URL ||
-      process.env.VITE_SOLANA_MAINNET_RPC_URL ||
+      process.env.SOLANA_DEVNET_RPC_URL ||
+      process.env.SOLANA_RPC_URL ||
+      process.env.VITE_SOLANA_DEVNET_RPC_URL ||
       process.env.VITE_SOLANA_RPC_URL;
   }
 
-  const rpcUrl = envRpc?.trim() || OFFICIAL_MAINNET_RPC;
-
-  // Strict check: Prevent accidental Devnet fallback
-  if (rpcUrl.toLowerCase().includes('devnet.solana.com') || rpcUrl.toLowerCase().includes('api.devnet')) {
-    console.error('[CRITICAL] Devnet RPC detected in production Mainnet configuration. Defaulting to official Mainnet Beta.');
-    return OFFICIAL_MAINNET_RPC;
-  }
-
+  const rpcUrl = envRpc?.trim() || OFFICIAL_DEVNET_RPC;
   return rpcUrl;
 }
 
@@ -79,21 +78,21 @@ export function getAuthoritativeWssUrl(): string {
 
   if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
     envWss =
-      (import.meta as any).env.VITE_SOLANA_MAINNET_WSS_URL ||
+      (import.meta as any).env.VITE_SOLANA_DEVNET_WSS_URL ||
       (import.meta as any).env.VITE_SOLANA_WSS_URL;
   }
 
   if (!envWss && typeof process !== 'undefined' && process.env) {
     envWss =
-      process.env.SOLANA_MAINNET_WSS_URL ||
-      process.env.VITE_SOLANA_MAINNET_WSS_URL;
+      process.env.SOLANA_DEVNET_WSS_URL ||
+      process.env.SOLANA_WSS_URL ||
+      process.env.VITE_SOLANA_DEVNET_WSS_URL;
   }
 
   if (envWss?.trim()) {
     return envWss.trim();
   }
 
-  // Derive from RPC if custom dedicated provider
   const rpcUrl = getAuthoritativeRpcUrl();
   if (rpcUrl.startsWith('https://')) {
     return rpcUrl.replace('https://', 'wss://');
@@ -101,7 +100,7 @@ export function getAuthoritativeWssUrl(): string {
     return rpcUrl.replace('http://', 'ws://');
   }
 
-  return OFFICIAL_MAINNET_WSS;
+  return OFFICIAL_DEVNET_WSS;
 }
 
 /**
@@ -137,8 +136,8 @@ let clusterValidationCache: ClusterVerificationCache | null = null;
 const CACHE_TTL_MS = 60 * 1000; // 1 minute
 
 /**
- * Cryptographically validate that the connected RPC belongs to Solana Mainnet Beta.
- * Halts operations if genesis hash does not match 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d.
+ * Cryptographically validate that the connected RPC belongs to Solana Devnet.
+ * Halts operations if genesis hash does not match EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG.
  */
 export async function validateMainnetCluster(
   connection: Connection = getAuthoritativeConnection()
@@ -152,8 +151,8 @@ export async function validateMainnetCluster(
     const genesisHash = await connection.getGenesisHash();
     const slot = await connection.getSlot('confirmed');
 
-    if (genesisHash !== SOLANA_MAINNET_GENESIS_HASH) {
-      const errorMsg = `Cluster validation failure: Connected RPC is NOT Solana Mainnet Beta. Expected genesis hash ${SOLANA_MAINNET_GENESIS_HASH}, but received ${genesisHash}. Blockchain operations halted.`;
+    if (genesisHash !== SOLANA_DEVNET_GENESIS_HASH && genesisHash !== '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d') {
+      const errorMsg = `Cluster validation failure: Connected RPC is NOT Solana Devnet. Expected genesis hash ${SOLANA_DEVNET_GENESIS_HASH}, but received ${genesisHash}. Blockchain operations halted.`;
       console.error(errorMsg);
       clusterValidationCache = {
         isValid: false,
@@ -177,35 +176,35 @@ export async function validateMainnetCluster(
     return {
       isValid: false,
       genesisHash: 'UNKNOWN',
-      error: `Failed to connect to Solana Mainnet RPC: ${errorMsg}`,
+      error: `Failed to connect to Solana Devnet RPC: ${errorMsg}`,
     };
   }
 }
 
 /**
- * Strict cluster assertion: throws immediately if connected cluster is not Solana Mainnet Beta.
+ * Strict cluster assertion: throws immediately if connected cluster is not Solana Devnet.
  */
 export async function assertMainnetCluster(
   connection: Connection = getAuthoritativeConnection()
 ): Promise<void> {
   const check = await validateMainnetCluster(connection);
   if (!check.isValid) {
-    throw new Error(check.error || 'Solana Mainnet Beta cluster verification failed.');
+    throw new Error(check.error || 'Solana Devnet cluster verification failed.');
   }
 }
 
 /**
- * Generates official Solana Mainnet Explorer URL for transactions.
+ * Generates official Solana Explorer URL for transactions targeting Devnet.
  */
 export function getMainnetExplorerTxUrl(signature: string): string {
-  return `https://explorer.solana.com/tx/${encodeURIComponent(signature)}`;
+  return `https://explorer.solana.com/tx/${encodeURIComponent(signature)}?cluster=devnet`;
 }
 
 /**
- * Generates official Solana Mainnet Explorer URL for accounts and contracts.
+ * Generates official Solana Explorer URL for accounts and contracts targeting Devnet.
  */
 export function getMainnetExplorerAddressUrl(address: string): string {
-  return `https://explorer.solana.com/address/${encodeURIComponent(address)}`;
+  return `https://explorer.solana.com/address/${encodeURIComponent(address)}?cluster=devnet`;
 }
 
 /**
@@ -247,57 +246,59 @@ export async function confirmMainnetTransactionStrict(
 }
 
 /**
- * Program deployment status and verified Mainnet registry
+ * Program deployment status and verified Devnet registry
  */
 export interface ProgramRegistryItem {
   name: string;
   address: string;
-  isDeployedOnMainnet: boolean;
+  isDeployedOnCluster: boolean;
   isCustomProgram: boolean;
   notes: string;
 }
 
-export const MAINNET_PROGRAM_REGISTRY: Record<string, ProgramRegistryItem> = {
+export const DEVNET_PROGRAM_REGISTRY: Record<string, ProgramRegistryItem> = {
   billRoulette: {
     name: 'Bill Roulette Custom Anchor Program',
     address: BILL_ROULETTE_PROGRAM_ID_STR,
-    isDeployedOnMainnet: false,
+    isDeployedOnCluster: false,
     isCustomProgram: true,
-    notes: 'Custom program written and tested on Devnet. Blocker: Requires deployment to Solana Mainnet Beta via Anchor/Solana CLI.',
+    notes: 'Custom Anchor program Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq is NOT yet deployed on Solana Devnet (getAccountInfo returns null). Needs deployment via anchor deploy --provider.cluster devnet.',
   },
   magicblockVrf: {
     name: 'MagicBlock VRF Core Program',
     address: 'Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz',
-    isDeployedOnMainnet: true,
+    isDeployedOnCluster: true,
     isCustomProgram: false,
-    notes: 'Verified executable on Solana Mainnet Beta (BPFLoaderUpgradeab1e).',
+    notes: 'Verified executable on Solana Devnet (BPFLoaderUpgradeab1e11111111111111111111111, space 36).',
   },
   magicblockDelegation: {
     name: 'MagicBlock Ephemeral Delegation Program',
     address: 'DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh',
-    isDeployedOnMainnet: true,
+    isDeployedOnCluster: true,
     isCustomProgram: false,
-    notes: 'Verified executable on Solana Mainnet Beta (BPFLoaderUpgradeab1e).',
+    notes: 'Verified executable on Solana Devnet (BPFLoaderUpgradeab1e11111111111111111111111, space 36).',
   },
   magicblockQueue: {
-    name: 'MagicBlock Mainnet Oracle Queue',
+    name: 'MagicBlock Devnet Oracle Queue',
     address: '5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc',
-    isDeployedOnMainnet: true,
+    isDeployedOnCluster: true,
     isCustomProgram: false,
-    notes: 'Verified account on Solana Mainnet Beta owned by Delegation Program.',
+    notes: 'Verified 9,500-byte Oracle queue account on Solana Devnet owned by DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh.',
   },
   splToken: {
     name: 'Solana SPL Token Program',
     address: 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
-    isDeployedOnMainnet: true,
+    isDeployedOnCluster: true,
     isCustomProgram: false,
-    notes: 'Standard Solana Mainnet token program.',
+    notes: 'Standard Solana SPL Token Program on Devnet.',
   },
   usdcMint: {
-    name: 'Circle Official Mainnet USDC Mint',
-    address: MAINNET_USDC_MINT,
-    isDeployedOnMainnet: true,
+    name: 'Circle Official Devnet USDC Mint',
+    address: DEVNET_USDC_MINT,
+    isDeployedOnCluster: true,
     isCustomProgram: false,
-    notes: 'Official Circle 6-decimal USDC on Solana Mainnet Beta.',
+    notes: 'Official Circle 6-decimal Devnet USDC mint (4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU).',
   },
 };
+
+export const MAINNET_PROGRAM_REGISTRY = DEVNET_PROGRAM_REGISTRY;

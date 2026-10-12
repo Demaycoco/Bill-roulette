@@ -38,7 +38,7 @@ export function NetworkBadge() {
               : 'bg-[#ff5a5f]'
           }`}
         />
-        Solana Mainnet
+        Solana Devnet
       </span>
       {slot && (
         <>

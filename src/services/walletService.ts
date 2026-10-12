@@ -114,7 +114,7 @@ class WalletService {
     balanceUsdcBaseUnits: null,
     isConnecting: false,
     error: null,
-    network: 'mainnet-beta',
+    network: 'devnet',
     isExternal: false,
   };
   private listeners: Set<WalletListener> = new Set();
@@ -464,13 +464,48 @@ class WalletService {
       };
     }
 
-    // 2. Reject: Solana Mainnet Beta does not support airdrops
-    return {
-      success: false,
-      errorCode: 'NOT_DEVNET',
-      error: 'Airdrop is not supported on Solana Mainnet Beta. Please fund your connected wallet with genuine SOL or Circle USDC.',
-      balanceRefreshed: false,
-    };
+    // 2. Execute Devnet Airdrop request
+    try {
+      const signature = await this.connection.requestAirdrop(pubkey, 1 * LAMPORTS_PER_SOL);
+      const latestBlockhash = await this.connection.getLatestBlockhash('confirmed');
+      await confirmMainnetTransactionStrict(this.connection, {
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      });
+
+      // Refresh balance
+      await this.refreshBalance();
+      const currentBalanceSol = this.state.balanceLamports !== null
+        ? this.state.balanceLamports / LAMPORTS_PER_SOL
+        : undefined;
+
+      return {
+        success: true,
+        signature,
+        explorerUrl: getMainnetExplorerTxUrl(signature),
+        balanceRefreshed: true,
+        currentBalanceSol,
+      };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (errorMsg.includes('429') || errorMsg.toLowerCase().includes('rate limit')) {
+        return {
+          success: false,
+          errorCode: 'RATE_LIMITED',
+          error: 'Solana Devnet faucet rate limit reached. Please wait or use https://faucet.solana.com.',
+          faucetAlternativeUrl: 'https://faucet.solana.com',
+          balanceRefreshed: false,
+        };
+      }
+      return {
+        success: false,
+        errorCode: 'TRANSACTION_FAILED',
+        error: `Devnet airdrop failed: ${errorMsg}`,
+        faucetAlternativeUrl: 'https://faucet.solana.com',
+        balanceRefreshed: false,
+      };
+    }
   }
 
   /**

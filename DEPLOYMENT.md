@@ -1,6 +1,6 @@
 # Solana Anchor Smart Contract & MagicBlock VRF Deployment Guide
 
-This document details the architecture, on-chain integration, and deployment procedure for the **Bill Roulette** Anchor program on **Solana Devnet** with the official **MagicBlock Verifiable Random Function (VRF)**.
+This document details the architecture, on-chain integration, and deployment procedure for the **Bill Roulette** Anchor program on **Solana Mainnet Beta** with the official **MagicBlock Verifiable Random Function (VRF)**.
 
 ---
 
@@ -8,8 +8,7 @@ This document details the architecture, on-chain integration, and deployment pro
 
 - **Official Repository**: [magicblock-labs/solana-vrf](https://github.com/magicblock-labs/solana-vrf)
 - **MagicBlock VRF Program ID**: `Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz`
-- **Default Devnet Oracle Queue**: `B8hnq84Uo739q27iN4eW1eE5QjSjU4G4yZ76u4PVRFq`
-- **Default Ephemeral Queue**: `D7ck4iL1oyncNhKheb1TUgpV7V7axYWVQ6fw26EPKp1h`
+- **Official Mainnet Oracle Queue**: `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc`
 - **Standard**: RFC 9381 (ECVRF using Ristretto255 / Curve25519)
 - **Bill Roulette Program ID**: `Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq`
 
@@ -105,29 +104,35 @@ Invoked by the MagicBlock VRF Program or authorized Oracle authority once the EC
 # Configure Solana CLI for Devnet
 solana config set --url https://api.devnet.solana.com
 
-# Create keypair if needed
+# Create keypair or configure deployer wallet
 solana-keygen new --outfile ~/.config/solana/id.json
 
-# Request Devnet SOL for deployment rent
-solana airdrop 2 ~/.config/solana/id.json
+# Check deployer public key and balance
+solana address
+solana balance
+
+# Airdrop Devnet SOL for program account rent and transaction fees (requires ~3-5 SOL)
+solana airdrop 2
+solana airdrop 2
+# Or use https://faucet.solana.com
 ```
 
 ### Build & Test
 ```bash
-# Run automated specification test suite (36 tests)
+# Run automated specification test suite
 npm test
 
 # Build Anchor smart contract
 anchor build
 ```
 
-### Deploy to Devnet
+### Deploy to Solana Devnet
 ```bash
 # Deploy to Devnet cluster
 anchor deploy --provider.cluster devnet
 
-# Inspect program state
-solana program show Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq
+# Inspect deployed program state on Devnet
+solana program show Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq --url https://api.devnet.solana.com
 ```
 
 ---

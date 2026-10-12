@@ -48,9 +48,9 @@ class TransactionVerificationService {
         return {
           isVerifiedOnChain: true,
           status: 'verified_on_chain',
-          displayBadge: 'Verified on Mainnet',
+          displayBadge: 'Verified on Devnet',
           badgeVariant: 'success',
-          details: `Confirmed on Solana Mainnet Beta at slot #${txInfo.slot}. Verified on-chain.`,
+          details: `Confirmed on Solana Devnet at slot #${txInfo.slot}. Verified on-chain.`,
           explorerUrl: txInfo.explorerUrl,
         };
       } else {
@@ -59,7 +59,7 @@ class TransactionVerificationService {
           status: 'blockchain_pending',
           displayBadge: 'Pending RPC Confirmation',
           badgeVariant: 'warning',
-          details: 'Transaction submitted to Solana Mainnet Beta, awaiting block finalization.',
+          details: 'Transaction submitted to Solana Devnet, awaiting block finalization.',
           explorerUrl: solanaTransactionService.getExplorerUrl(round.transactionSignature),
         };
       }
@@ -69,7 +69,7 @@ class TransactionVerificationService {
         status: 'blockchain_pending',
         displayBadge: 'Verification Unreachable',
         badgeVariant: 'warning',
-        details: 'Solana Mainnet RPC could not be reached to verify this signature.',
+        details: 'Solana Devnet RPC could not be reached to verify this signature.',
       };
     }
   }

@@ -149,7 +149,7 @@ export interface SolanaTransactionInfo {
   signature: string;
   slot?: number;
   confirmed: boolean;
-  cluster: 'mainnet-beta';
+  cluster: 'devnet' | 'mainnet-beta';
   explorerUrl?: string;
   programId: string;
 }
@@ -165,6 +165,6 @@ export interface WalletState {
   balanceUsdcBaseUnits?: number | null;
   isConnecting: boolean;
   error: string | null;
-  network: 'mainnet-beta';
+  network: 'devnet' | 'mainnet-beta';
   isExternal?: boolean;
 }

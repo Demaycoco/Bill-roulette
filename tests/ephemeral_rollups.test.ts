@@ -4,8 +4,8 @@ import { PublicKey, Keypair } from '@solana/web3.js';
 import {
   MAGICBLOCK_DELEGATION_PROGRAM_ID,
   MAGICBLOCK_UNDELEGATE_DISCRIMINATOR,
-  MAGICBLOCK_ER_DEVNET_RPC,
-  MAGICBLOCK_ROUTER_DEVNET_RPC,
+  MAGICBLOCK_ER_MAINNET_RPC,
+  MAGICBLOCK_ROUTER_MAINNET_RPC,
   DEFAULT_EPHEMERAL_VALIDATOR,
   DEFAULT_EPHEMERAL_VRF_QUEUE,
   ephemeralRollupService,
@@ -40,9 +40,9 @@ describe('MagicBlock Ephemeral Rollups: Specification & Lifecycle Protocol Tests
     );
   });
 
-  test('3. Magic Router and Ephemeral Rollup Devnet endpoints are correctly configured', () => {
-    assert.strictEqual(MAGICBLOCK_ROUTER_DEVNET_RPC, 'https://devnet-router.magicblock.app');
-    assert.strictEqual(MAGICBLOCK_ER_DEVNET_RPC, 'https://devnet.magicblock.app');
+  test('3. Magic Router and Ephemeral Rollup Mainnet endpoints are correctly configured', () => {
+    assert.strictEqual(MAGICBLOCK_ROUTER_MAINNET_RPC, 'https://router.magicblock.app');
+    assert.strictEqual(MAGICBLOCK_ER_MAINNET_RPC, 'https://mainnet.magicblock.app');
     assert.ok(DEFAULT_EPHEMERAL_VALIDATOR instanceof PublicKey);
     assert.ok(DEFAULT_EPHEMERAL_VRF_QUEUE instanceof PublicKey);
   });
@@ -148,7 +148,7 @@ describe('MagicBlock Ephemeral Rollups: Specification & Lifecycle Protocol Tests
     const finalSession = await ephemeralRollupService.undelegateTable(tableId, hostKeypair.publicKey);
     assert.strictEqual(finalSession.isDelegated, false);
     assert.strictEqual(finalSession.phase, 'RETURNED_TO_BASE');
-    assert.strictEqual(finalSession.isGasless, false, 'Base Devnet layer uses standard gas');
+    assert.strictEqual(finalSession.isGasless, false, 'Base Mainnet layer uses standard gas');
   });
 
   test('7. VRF Compatibility: Delegated table is safely undelegated prior to Base Layer VRF settlement', async () => {
@@ -215,7 +215,7 @@ describe('MagicBlock Ephemeral Rollups: Specification & Lifecycle Protocol Tests
   test('9. Rollup health check validates reachability and latency', async () => {
     const health = await ephemeralRollupService.getRollupHealth();
     assert.strictEqual(health.isHealthy, true);
-    assert.strictEqual(health.activeEndpoint, MAGICBLOCK_ROUTER_DEVNET_RPC);
+    assert.strictEqual(health.activeEndpoint, MAGICBLOCK_ROUTER_MAINNET_RPC);
     assert.ok(health.latencyMs >= 0);
   });
 

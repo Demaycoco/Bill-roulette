@@ -11,7 +11,7 @@ import {
 
 export interface MagicBlockConfig {
   solanaRpcUrl: string;
-  solanaCluster: 'mainnet-beta';
+  solanaCluster: 'devnet' | 'mainnet-beta';
   billRouletteProgramId: PublicKey;
   vrfProgramId: PublicKey;
   defaultQueueAddress: string;
@@ -19,13 +19,13 @@ export interface MagicBlockConfig {
   isDeployedOnChain: boolean;
 }
 
-// Official MagicBlock Solana VRF Program ID verified on Solana Mainnet Beta
+// Official MagicBlock Solana VRF Program ID verified on Solana Devnet/Mainnet
 export const MAGICBLOCK_VRF_PROGRAM_ID_STR =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_VRF_PROGRAM_ID) ||
   (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_VRF_PROGRAM_ID) ||
   MAGICBLOCK_VRF_MAINNET_PROGRAM_ID.toBase58();
 
-// Official MagicBlock VRF Consumer Program ID on Solana Mainnet Beta
+// Official MagicBlock VRF Consumer Program ID on Solana Devnet/Mainnet
 export const MAGICBLOCK_CONSUMER_PROGRAM_ID_STR =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_CONSUMER_PROGRAM_ID) ||
   (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_CONSUMER_PROGRAM_ID) ||
@@ -48,7 +48,7 @@ export const MAGICBLOCK_CONFIG: MagicBlockConfig = {
   ephemeralRpcUrl:
     (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MAGICBLOCK_EPHEMERAL_RPC_URL) ||
     (typeof process !== 'undefined' && process.env?.VITE_MAGICBLOCK_EPHEMERAL_RPC_URL) ||
-    'https://mainnet.magicblock.app',
+    'https://devnet.magicblock.app',
   isDeployedOnChain: true,
 };
 

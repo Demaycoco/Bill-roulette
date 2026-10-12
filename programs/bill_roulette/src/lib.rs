@@ -96,7 +96,7 @@ pub mod bill_roulette {
         instructions::delegate_table::handler(ctx)
     }
 
-    /// 10. Undelegate table from Ephemeral Rollup back to Solana Devnet L1 for authoritative round settlement.
+    /// 10. Undelegate table from Ephemeral Rollup back to Solana Mainnet Beta L1 for authoritative round settlement.
     pub fn undelegate_table(ctx: Context<UndelegateTable>) -> Result<()> {
         instructions::undelegate_table::handler(ctx)
     }

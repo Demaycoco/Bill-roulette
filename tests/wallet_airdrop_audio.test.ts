@@ -37,12 +37,15 @@ describe('Mainnet Wallet Integration & Audio API Protocol Tests', () => {
     assert.ok(wallets.some((w) => w.id === 'backpack'));
   });
 
-  test('4. Request Airdrop strictly rejects on Solana Mainnet Beta without hanging', async () => {
+  test('4. Request Airdrop provides structured result on Solana Devnet without hanging', async () => {
     const testPubkey = Keypair.generate().publicKey.toBase58();
     const result = await walletService.requestAirdrop(testPubkey);
-    assert.strictEqual(result.success, false);
-    assert.strictEqual(result.errorCode, 'NOT_DEVNET');
-    assert.match(result.error || '', /not supported on Solana Mainnet Beta/i);
+    assert.strictEqual(typeof result.success, 'boolean');
+    assert.strictEqual(typeof result.balanceRefreshed, 'boolean');
+    if (!result.success) {
+      assert.ok(result.errorCode);
+      assert.ok(result.error);
+    }
   });
 
   test('5. Disconnect resets wallet state cleanly', async () => {

@@ -24,7 +24,7 @@ pub fn handler(
     let table = &ctx.accounts.table;
 
     msg!(
-        "Table {} undelegated from MagicBlock Ephemeral Rollup to Solana Devnet L1.",
+        "Table {} undelegated from MagicBlock Ephemeral Rollup to Solana Mainnet Beta L1.",
         table.table_id
     );
 

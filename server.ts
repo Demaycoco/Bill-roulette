@@ -287,13 +287,13 @@ app.delete('/api/rounds', (_req, res) => {
   res.status(204).send();
 });
 
-// --- SECURE SOLANA MAINNET RPC PROXY ---
+// --- SECURE SOLANA DEVNET RPC PROXY ---
 // Proxies JSON-RPC calls without exposing private RPC provider credentials / API keys to frontend bundles
 app.post('/api/solana-rpc', async (req, res) => {
   const serverRpcUrl =
-    process.env.SOLANA_MAINNET_RPC_URL ||
+    process.env.SOLANA_DEVNET_RPC_URL ||
     process.env.SOLANA_RPC_URL ||
-    'https://api.mainnet-beta.solana.com';
+    'https://api.devnet.solana.com';
 
   try {
     const upstreamRes = await fetch(serverRpcUrl, {
@@ -314,7 +314,7 @@ app.post('/api/solana-rpc', async (req, res) => {
       jsonrpc: '2.0',
       error: {
         code: -32000,
-        message: `Upstream Solana Mainnet RPC gateway failure: ${errorMsg}`,
+        message: `Upstream Solana Devnet RPC gateway failure: ${errorMsg}`,
       },
       id: req.body?.id ?? null,
     });
@@ -324,11 +324,11 @@ app.post('/api/solana-rpc', async (req, res) => {
 // Network status and cluster validation endpoint
 app.get('/api/network/status', (_req, res) => {
   res.json({
-    cluster: 'mainnet-beta',
-    genesisHash: '5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d',
-    officialFallbackRpc: 'https://api.mainnet-beta.solana.com',
-    dedicatedRpcConfigured: Boolean(process.env.SOLANA_MAINNET_RPC_URL),
-    status: 'ACTIVE_MAINNET_BETA',
+    cluster: 'devnet',
+    genesisHash: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG',
+    officialFallbackRpc: 'https://api.devnet.solana.com',
+    dedicatedRpcConfigured: Boolean(process.env.SOLANA_DEVNET_RPC_URL),
+    status: 'ACTIVE_DEVNET',
   });
 });
 
