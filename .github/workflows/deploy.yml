@@ -1,0 +1,35 @@
+
+name: Deploy Bill Roulette Program to Solana Devnet
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect-and-build:
+    name: Check Solana project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show project files
+        run: |
+          echo "Checking Bill Roulette project..."
+          ls -la
+          echo "Checking program directory..."
+          find programs -maxdepth 3 -type f | head -100
+
+      - name: Check Anchor configuration
+        run: |
+          if [ -f Anchor.toml ]; then
+            echo "Anchor.toml found"
+            cat Anchor.toml
+          else
+            echo "Anchor.toml not found"
+            echo "The deployment setup must be identified before deploying."
+          fi
+          
