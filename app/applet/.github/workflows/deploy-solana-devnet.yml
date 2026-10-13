@@ -1,0 +1,107 @@
+name: Deploy Bill Roulette Program to Solana Devnet
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_cluster:
+        description: 'Solana Cluster Target'
+        required: true
+        default: 'devnet'
+        type: choice
+        options:
+          - devnet
+          - mainnet-beta
+
+jobs:
+  build-and-deploy:
+    name: Build SBF & Deploy Program
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust Stable Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.79.0
+
+      - name: Cache Solana Toolsuite
+        uses: actions/cache@v4
+        id: cache-solana
+        with:
+          path: ~/.local/share/solana/install/active_release
+          key: ${{ runner.os }}-solana-v1.18.26
+
+      - name: Install Solana CLI
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v1.18.26/install)"
+
+      - name: Add Solana to PATH
+        run: |
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Verify Solana and Rust Versions
+        run: |
+          solana --version
+          rustc --version
+          cargo --version
+
+      - name: Build SBF Program
+        run: |
+          mkdir -p target/deploy
+          cargo-build-sbf --manifest-path programs/bill_roulette/Cargo.toml --sbf-out-dir target/deploy
+          ls -lh target/deploy/bill_roulette.so
+
+      - name: Verify Program Keypair Matches Required Program ID
+        run: |
+          PROGRAM_PUBKEY=$(solana address -k programs/bill_roulette/bill_roulette-keypair.json)
+          echo "Built Program Keypair Pubkey: $PROGRAM_PUBKEY"
+          if [ "$PROGRAM_PUBKEY" != "4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS" ]; then
+            echo "ERROR: Keypair public key does not match required Program ID 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS"
+            exit 1
+          fi
+          echo "Verified Program ID matches 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS exactly."
+
+      - name: Deploy to Solana Devnet
+        env:
+          DEPLOYER_PRIVATE_KEY: ${{ secrets.SOLANA_DEPLOYER_PRIVATE_KEY }}
+        run: |
+          if [ -z "$DEPLOYER_PRIVATE_KEY" ]; then
+            echo "Error: SOLANA_DEPLOYER_PRIVATE_KEY secret is not configured in GitHub Secrets."
+            exit 1
+          fi
+          
+          # Write deployer keypair to secure temporary file
+          echo "$DEPLOYER_PRIVATE_KEY" > /tmp/deployer.json
+          DEPLOYER_PUBKEY=$(solana address -k /tmp/deployer.json)
+          echo "Deploying with wallet: $DEPLOYER_PUBKEY"
+          
+          # Set Devnet RPC
+          solana config set --url https://api.devnet.solana.com --keypair /tmp/deployer.json
+          
+          # Check Devnet balance
+          solana balance
+          
+          # Deploy with deterministic Program ID keypair
+          solana program deploy \
+            target/deploy/bill_roulette.so \
+            --program-id programs/bill_roulette/bill_roulette-keypair.json \
+            --keypair /tmp/deployer.json \
+            --url https://api.devnet.solana.com
+          
+          # Clean up temporary secret key file
+          rm -f /tmp/deployer.json
+
+      - name: Verify On-Chain Program Account
+        run: |
+          echo "Querying Devnet on-chain account for 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS..."
+          solana program show 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS --url https://api.devnet.solana.com
+          echo "Devnet Explorer: https://explorer.solana.com/address/4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS?cluster=devnet"
+
+      - name: Upload Build Artifact (.so)
+        uses: actions/upload-artifact@v4
+        with:
+          name: bill_roulette-sbf-binary
+          path: target/deploy/bill_roulette.so
+          retention-days: 14

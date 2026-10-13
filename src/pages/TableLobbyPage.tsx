@@ -440,7 +440,7 @@ export const TableLobbyPage: React.FC<TableLobbyPageProps> = ({
               {rollupSession?.isDelegated ? (
                 <code className="text-[#C8FF3D] font-mono text-[10px]">DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh</code>
               ) : (
-                <code className="text-[#8D958C] font-mono text-[10px]">Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq (Base L1)</code>
+                <code className="text-[#8D958C] font-mono text-[10px]">4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS (Base L1)</code>
               )}
             </span>
             <span className="text-[#525A51] text-[10px] font-mono">

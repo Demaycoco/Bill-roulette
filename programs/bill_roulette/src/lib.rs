@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq");
+declare_id!("4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS");
 
 #[program]
 pub mod bill_roulette {

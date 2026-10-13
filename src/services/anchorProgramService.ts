@@ -5,7 +5,7 @@ import { PublicKey } from '@solana/web3.js';
  * Anchor IDL & Program specifications for the Bill Roulette protocol.
  * Program Target: Solana Mainnet Beta
  */
-export const BILL_ROULETTE_PROGRAM_ID = new PublicKey('Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq');
+export const BILL_ROULETTE_PROGRAM_ID = new PublicKey('4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS');
 export const MAGICBLOCK_VRF_PROGRAM_ID = new PublicKey('Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz');
 export const MAGICBLOCK_DELEGATION_PROGRAM_ID = new PublicKey('DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh');
 export const MAGICBLOCK_UNDELEGATE_DISCRIMINATOR = new Uint8Array([196, 28, 41, 206, 48, 37, 51, 167]);
@@ -262,7 +262,7 @@ export const BILL_ROULETTE_IDL = {
 class AnchorProgramService {
   /**
    * Status of on-chain deployment target on Solana Mainnet Beta
-   * Program: Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq
+   * Program: 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS
    */
   public isProgramDeployedOnMainnet(): boolean {
     // Verified on-chain: Account is not found on Solana Mainnet Beta (Genesis: 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d).

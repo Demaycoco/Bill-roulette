@@ -13,7 +13,7 @@ import {
 import { tableService } from '../src/services/tableService';
 import { Table, EphemeralSession } from '../src/types';
 
-export const PROGRAM_ID = new PublicKey('Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq');
+export const PROGRAM_ID = new PublicKey('4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS');
 
 describe('MagicBlock Ephemeral Rollups: Specification & Lifecycle Protocol Tests', () => {
   const hostKeypair = Keypair.generate();

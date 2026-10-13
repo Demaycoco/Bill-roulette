@@ -6,10 +6,10 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-bill_roulette = "Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq"
+bill_roulette = "4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS"
 
 [programs.localnet]
-bill_roulette = "Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq"
+bill_roulette = "4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS"
 
 [registry]
 url = "https://api.apr.dev"

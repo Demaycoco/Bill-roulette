@@ -10,7 +10,7 @@ This document details the architecture, on-chain integration, and deployment pro
 - **MagicBlock VRF Program ID**: `Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz`
 - **Official Mainnet Oracle Queue**: `5hBR571xnXppuCPveTrctfTU7tJLSN94nq7kv7FRK5Tc`
 - **Standard**: RFC 9381 (ECVRF using Ristretto255 / Curve25519)
-- **Bill Roulette Program ID**: `Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq`
+- **Bill Roulette Program ID**: `4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS`
 
 ---
 
@@ -132,7 +132,7 @@ anchor build
 anchor deploy --provider.cluster devnet
 
 # Inspect deployed program state on Devnet
-solana program show Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq --url https://api.devnet.solana.com
+solana program show 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS --url https://api.devnet.solana.com
 ```
 
 ---

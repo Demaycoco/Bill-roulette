@@ -40,7 +40,7 @@ export const MAGICBLOCK_DEVNET_QUEUE = MAGICBLOCK_MAINNET_QUEUE;
 export const BILL_ROULETTE_PROGRAM_ID_STR =
   (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_BILL_ROULETTE_PROGRAM_ID) ||
   (typeof process !== 'undefined' && process.env?.VITE_BILL_ROULETTE_PROGRAM_ID) ||
-  'Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq';
+  '4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS';
 
 export const BILL_ROULETTE_PROGRAM_ID = new PublicKey(BILL_ROULETTE_PROGRAM_ID_STR);
 
@@ -262,7 +262,7 @@ export const DEVNET_PROGRAM_REGISTRY: Record<string, ProgramRegistryItem> = {
     address: BILL_ROULETTE_PROGRAM_ID_STR,
     isDeployedOnCluster: false,
     isCustomProgram: true,
-    notes: 'Custom Anchor program Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq is NOT yet deployed on Solana Devnet (getAccountInfo returns null). Needs deployment via anchor deploy --provider.cluster devnet.',
+    notes: 'Custom Anchor program 4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS is configured for Solana Devnet.',
   },
   magicblockVrf: {
     name: 'MagicBlock VRF Core Program',

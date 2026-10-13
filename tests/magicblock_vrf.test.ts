@@ -7,7 +7,7 @@ import {
 } from '../src/services/magicBlockVrfService';
 
 // Program ID from declare_id!
-export const PROGRAM_ID = new PublicKey('Ey54kdCeHW4PVT3cKDm2TKFmPrWWdqB2GysVSyiJpxHq');
+export const PROGRAM_ID = new PublicKey('4CPvi4nTGzeivoroWf9jusJPTEisQTZVRwrQY9WTW4mS');
 
 // PDA derivation helpers matching Rust contract exactly
 export function findTablePDA(host: PublicKey, tableId: string): [PublicKey, number] {
